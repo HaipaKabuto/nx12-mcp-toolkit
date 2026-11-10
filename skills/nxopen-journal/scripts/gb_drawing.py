@@ -1,0 +1,864 @@
+# -*- coding: utf-8 -*-
+"""GB-style drawing furniture + annotation helpers for NX 12 journals.
+
+随手出一张国标图纸的标准件：任何 NXOpen journal 把本目录加进 sys.path 后
+`import gb_drawing`，按 "建件 -> blank_datums -> apply_gb_preferences ->
+set_cjk_font -> new_sheet -> frame -> standard_views -> title_block/tech_note
+-> 标注 -> export_pdf" 的顺序调用即可
+得到与回归用例 33 同版的图纸质量。所有数值口径都来自回归用例实测（引用见
+各常量与 references/gb-drawing.md），不要凭感觉改。
+
+标准依据（本技能可证实部分）：
+  * GB/T 14689.1  幅面与边距：装订边 a=25，非装订边 c：A0/A1=10、A2-A4=5
+  * GB/T 10609.1  标题栏字段（设计/校核/日期/图号/比例/材料/图名）；本模块
+    默认版式 = 一张真实工程图纸实测（105x21，3 行 7mm，6 列），字段齐全
+  * GB/T 4458.4   尺寸道位：第一道距轮廓约 10mm、相邻道约 7mm（通行做法）；
+                同向多道按数值升序外推（小尺寸在内道、大尺寸在外道）。
+                成组等径孔只标一条数量引线（2x<O>10，quantity_label）；直径尺寸对象
+                也可加数量前缀（AppendedText.SetBeforeText）
+  * 投影角        第一角（GB）
+  * 字高          3.5 / 2.5（GB/T 14691 常用两档）
+
+NX 12 内嵌 Python 3.6 —— 不用 f-string，不做 3.7+ API 调用。
+"""
+import time
+
+import NXOpen
+import NXOpen.UF
+
+# ------------------------------------------------------------ GB constants
+SHEET = {"A4": (297.0, 210.0), "A3": (420.0, 297.0)}
+BINDING_A = 25.0                          # 装订边 a（GB/T 14689.1）
+NONBIND_C = {"A4": 5.0, "A3": 5.0}        # 非装订边 c；A0/A1 应为 10，未覆盖
+TEXT_DIM = 3.5                            # 尺寸/常用字高
+TEXT_SMALL = 2.5                          # 次要字高（标题栏字段）
+ARROW_LEN = 4.0                           # 箭头长度（19 号用例可用）
+LANE_FIRST = 10.0                         # 第一道尺寸线离轮廓
+LANE_STEP = 7.0                           # 相邻尺寸线道距
+VIEW_GAP = 22.0                           # 三视图间距（内容区留白）
+VIEW_MARGIN = 18.0                        # 视图组离图框
+# 标题栏：105x21，3 行 7mm，列宽 [label,value]x3（总宽约 105mm、
+# 三行结构 = 图名/设计校核日期/图号比例材料）。14/21 列宽放不下 10 字符
+# 日期（2.5 字高 ASCII 步进实测 1.88-2.16 mm/字符，随字型变：默认
+# chinesef_fs 约 2.16mm→21mm 列溢出画 #，set_cjk_font 后 chinesef 约
+# 1.88mm），故用 10/25，总宽 105 不变。
+TB_W, TB_H = 105.0, 21.0
+TB_COLS = [10.0, 25.0, 10.0, 25.0, 10.0, 25.0]
+TB_ROWS = [7.0, 7.0, 7.0]
+# detail_rect() 的选框放大系数。0.83 是早期启发式，来源已不可复现
+# （AskViewBorders 对 detail 返回选框本身、量不到边界圆，见
+# references/drafting.md B.4），保留只为不退化成 0；改前必须在实图上
+# 核对边界圆是否盖住目标区。
+DETAIL_CIRCLE_FACTOR = 0.83
+DEFAULT_NOTE_LINES = [
+    u"技术要求：",
+    u"1. 未注线性尺寸公差按GB/T 1804-m。",
+    u"2. 未注形位公差按GB/T 1184-K。",
+    u"3. 锐边倒钝去毛刺。",
+]
+
+
+def _ufs():
+    return NXOpen.UF.UFSession.GetUFSession()
+
+
+def _norm(r):
+    return r[0] if isinstance(r, tuple) else r
+
+
+# ------------------------------------------------------------- sheet setup
+def new_sheet(part, name="SHT1", size="A4"):
+    """Insert an A4 (or A3) first-angle sheet and make it current."""
+    if size not in SHEET:
+        raise RuntimeError("gb_drawing: unsupported size %r" % (size,))
+    sh = part.DrawingSheets.InsertSheet(
+        name, NXOpen.Drawings.DrawingSheet.StandardSheetSize.A4
+        if size == "A4" else
+        NXOpen.Drawings.DrawingSheet.StandardSheetSize.A3,
+        1.0, 1.0,
+        NXOpen.Drawings.DrawingSheet.ProjectionAngleType.FirstAngle)
+    sh.Open()
+    return sh
+
+
+def blank_datums(part):
+    """Blank every datum plane/axis before any view exists: the template's
+    datum coordinate system projects into every drafting view as stray
+    arrowheads. Blanked objects do not plot."""
+    n = 0
+    for o in part.Datums:
+        if not o.IsBlanked:
+            o.Blank()
+            n += 1
+    return n
+
+
+def apply_gb_preferences(part, dim_text=TEXT_DIM, small_text=TEXT_SMALL):
+    """Lettering 3.5/2.5 + filled arrows, per 19_drafting_annotation.py.
+
+    3.5 = 尺寸数字/注释/附加文本，2.5 = 公差（drafting-annotation.md §2）。
+    界线紧贴引出点、无箭头尾段（两份配方都要求 0）。"""
+    ap = part.Annotations.Preferences
+    lp = ap.GetLetteringPreferences()
+    for getter, setter, size in (
+            (lp.GetDimensionText, lp.SetDimensionText, dim_text),
+            (lp.GetGeneralText, lp.SetGeneralText, dim_text),
+            (lp.GetAppendedText, lp.SetAppendedText, dim_text),
+            (lp.GetToleranceText, lp.SetToleranceText, small_text)):
+        lt = getter()
+        lt.Size = float(size)
+        setter(lt)
+    ap.SetLetteringPreferences(lp)
+    lap = ap.GetLineAndArrowPreferences()
+    lap.ArrowheadLength = ARROW_LEN
+    lap.ArrowheadIncludedAngle = 10.0
+    lap.FirstPosToExtLineDist = 0.0
+    lap.LinePastArrowDistance = 0.0
+    lap.FirstArrowType = NXOpen.Annotations.ArrowheadType.FilledArrow
+    lap.SecondArrowType = NXOpen.Annotations.ArrowheadType.FilledArrow
+    ap.SetLineAndArrowPreferences(lap)
+
+
+# ------------------------------------------------------- table primitives
+def _cell(tn, row, col):
+    ufs = _ufs()
+    r = _norm(ufs.Tabnot.AskNthRow(tn, row))
+    c = _norm(ufs.Tabnot.AskNthColumn(tn, col))
+    return _norm(ufs.Tabnot.AskCellAtRowCol(r, c))
+
+
+def _read_cell(tn, ri, ci):
+    ufs = _ufs()
+    v = _norm(ufs.Tabnot.AskCellText(_cell(tn, ri, ci)))
+    if isinstance(v, tuple):
+        v = v[0]
+    return str(v)
+
+
+def _drain(tn):
+    """Default new tables are 5x5; remove all rows/cols before building."""
+    ufs = _ufs()
+    while True:
+        n = _norm(ufs.Tabnot.AskNmRows(tn))
+        n = int(n)
+        if n <= 0:
+            break
+        ufs.Tabnot.RemoveRow(_norm(ufs.Tabnot.AskNthRow(tn, 0)))
+    while True:
+        n = int(_norm(ufs.Tabnot.AskNmColumns(tn)))
+        if n <= 0:
+            break
+        ufs.Tabnot.RemoveColumn(_norm(ufs.Tabnot.AskNthColumn(tn, 0)))
+
+
+def _new_table(origin, col_widths, row_heights, thick_border=False):
+    """Table with origin = top-left corner, grows down (measured).  Row
+    heights only take effect once every cell's auto-fit is off (uf_tabnot.h:
+    "Fit methods auto size row and auto size text must be disabled")."""
+    ufs = _ufs()
+    sp = ufs.Tabnot.AskDefaultSectionPrefs()
+    if thick_border:
+        sp.UseDoubleWidthBorder = True
+        sp.BorderWidth = 0.7
+    sp.AttachPoint = NXOpen.UF.Tabnot.AttachPoint.ATTACH_POINT_TOP_LEFT
+    tn = _norm(ufs.Tabnot.Create(sp, [float(origin[0]), float(origin[1]), 0.0]))
+    _drain(tn)
+    for w in col_widths:
+        ufs.Tabnot.AddColumn(tn, _norm(ufs.Tabnot.CreateColumn(float(w))), -1)
+    for h in row_heights:
+        ufs.Tabnot.AddRow(tn, _norm(ufs.Tabnot.CreateRow(float(h))), -1)
+    _pin_rows(tn, row_heights, len(col_widths))
+    return tn
+
+
+def _pin_rows(tn, row_heights, ncols):
+    ufs = _ufs()
+    for ri, h in enumerate(row_heights):
+        row = _norm(ufs.Tabnot.AskNthRow(tn, ri))
+        for ci in range(ncols):
+            cell = _cell(tn, ri, ci)
+            cp = ufs.Tabnot.AskCellPrefs(cell)
+            cp.NmFitMethods = 0
+            ufs.Tabnot.SetCellPrefs(cell, cp)
+        ufs.Tabnot.SetRowHeight(row, float(h))
+
+
+def _center_cell(tn, ri, ci):
+    ufs = _ufs()
+    cell = _cell(tn, ri, ci)
+    cp = ufs.Tabnot.AskCellPrefs(cell)
+    cp.HorizJust = NXOpen.UF.Tabnot.Just.JUST_CENTER
+    cp.VertJust = NXOpen.UF.Tabnot.Just.JUST_MIDDLE
+    ufs.Tabnot.SetCellPrefs(cell, cp)
+
+
+# ------------------------------------------------------------- GB furniture
+def frame(sheet, size="A4"):
+    """GB/T 14689.1 图框：单格表格 + 双线宽边框，随图纸出图。
+
+    先 `sheet.Open()` 把传入图纸置为当前页再建表。
+    Returns dict(tag=..., left, right, top, bottom) in sheet mm."""
+    sheet.Open()
+    w, h = SHEET[size]
+    c = NONBIND_C[size]
+    left, bottom = BINDING_A, c
+    right, top = w - c, h - c
+    tn = _new_table((left, top), [right - left], [top - bottom],
+                    thick_border=True)
+    return {"tag": tn, "left": left, "right": right,
+            "top": top, "bottom": bottom}
+
+
+def title_block(sheet, frame_geo, name=None, design=None, check=None,
+                date=None, dwg_no=None, scale_txt="1:1", material=None):
+    """标题栏，贴图框右下角（GB/T 10609.1 字段、真实工程图纸实测版式）。
+
+    签名/材料等没有依据的字段传 None 留空，不造数据；date=None 取当天
+    （生成日期是真实事实）。Returns the same geometry dict as frame()."""
+    sheet.Open()
+    ufs = _ufs()
+    left = frame_geo["right"] - TB_W
+    top = frame_geo["bottom"] + TB_H
+    dp = ufs.Tabnot.AskDefaultCellPrefs()
+    dp.TextHeight = TEXT_SMALL
+    ufs.Tabnot.SetDefaultCellPrefs(dp)
+    tn = _new_table((left, top), TB_COLS, TB_ROWS, thick_border=True)
+    ufs.Tabnot.MergeCells(_cell(tn, 0, 0), _cell(tn, 0, 5))
+    rows = [
+        [name or "", "", "", "", "", ""],
+        [u"设计", design or "", u"校核", check or "", u"日期",
+         date if date is not None else time.strftime("%Y-%m-%d")],
+        [u"图号", dwg_no or "", u"比例", scale_txt or "", u"材料",
+         material or ""],
+    ]
+    for ri, vals in enumerate(rows):
+        for ci, val in enumerate(vals):
+            if val != "":
+                ufs.Tabnot.SetCellText(_cell(tn, ri, ci), val)
+    _pin_rows(tn, TB_ROWS, len(TB_COLS))
+    _center_cell(tn, 0, 0)
+    # read back everything the caller actually asked to write
+    want = {(1, 0): u"设计", (2, 0): u"图号", (2, 2): u"比例"}
+    if name:
+        want[(0, 0)] = name
+    if design:
+        want[(1, 1)] = design
+    if check:
+        want[(1, 3)] = check
+    if date is not None:
+        want[(1, 5)] = date
+    if dwg_no:
+        want[(2, 1)] = dwg_no
+    if scale_txt:
+        want[(2, 3)] = scale_txt
+    if material:
+        want[(2, 5)] = material
+    for (ri, ci), expect in sorted(want.items()):
+        got = _read_cell(tn, ri, ci)
+        if got != str(expect):
+            raise RuntimeError("title_block r%d c%d read-back %r != %r"
+                               % (ri, ci, got, expect))
+    return {"tag": tn, "left": left, "right": frame_geo["right"],
+            "top": top, "bottom": frame_geo["bottom"]}
+
+
+def tech_note(sheet, tb_geo, lines=None, size=TEXT_DIM, base_y=None):
+    """技术要求块：贴标题栏正上方、随行数上生长（GB 通行位置）。
+    行距 6.5mm（约 1.9 倍字高），块底距标题栏顶约 6mm。
+
+    base_y: 上方已有明细栏时传明细栏顶边 y，避免技术要求压在明细栏上。"""
+    if lines is None:
+        lines = DEFAULT_NOTE_LINES
+    x = tb_geo["left"]
+    anchor = tb_geo["top"] if base_y is None else float(base_y)
+    y = anchor + 6.5 * len(lines) + 6.0
+    note = part_note(sheet, lines, (x, y), size)
+    return note
+
+
+def part_note(sheet, lines, origin_xy, size=TEXT_DIM):
+    """Multi-line note anchored at its TOP-LEFT corner (default anchor is
+    the block centre, which makes centred ragged lines - not GB style;
+    measured).  NX re-interprets the stored origin when the
+    alignment changes, so the origin is pinned AFTER switching to TopLeft -
+    then it is the block's top-left corner, deterministically."""
+    part = sheet_part(sheet)
+    note = part.Annotations.CreateNote(
+        list(lines), NXOpen.Point3d(float(origin_xy[0]), float(origin_xy[1]),
+                                    0.0),
+        NXOpen.AxisOrientation.Horizontal, None, None)
+    if note is None:
+        raise RuntimeError("CreateNote returned None")
+    lp = note.GetLetteringPreferences()
+    g = lp.GetGeneralText()
+    g.Size = float(size)
+    lp.SetGeneralText(g)
+    lp.AlignmentPosition = NXOpen.Annotations.AlignmentPosition.TopLeft
+    note.SetLetteringPreferences(lp)
+    note.AnnotationOrigin = NXOpen.Point3d(float(origin_xy[0]),
+                                           float(origin_xy[1]), 0.0)
+    got = note.GetLetteringPreferences().AlignmentPosition
+    if got != NXOpen.Annotations.AlignmentPosition.TopLeft:
+        raise RuntimeError("note alignment read-back %r != TopLeft" % (got,))
+    o = note.AnnotationOrigin
+    if abs(o.X - origin_xy[0]) > 1e-6 or abs(o.Y - origin_xy[1]) > 1e-6:
+        raise RuntimeError("note origin read-back (%.2f,%.2f) != (%.2f,%.2f)"
+                           % (o.X, o.Y, origin_xy[0], origin_xy[1]))
+    return note
+
+
+def sheet_part(sheet):
+    return sheet.OwningPart
+
+
+# ------------------------------------------------------------ view placement
+def view_bbox(view):
+    """Extent box centre + size from AskViewBorders.
+
+    注意：边框含视图标签/边界余量，可以比内容大很多（TOP 视图边框高
+    141mm 而内容 60mm），只能用于"视图占多大地方"的粗估，禁止用于内容
+    定位与尺寸道推导——用 content_bbox()。"""
+    ufs = _ufs()
+    b = ufs.Draw.AskViewBorders(view.Tag)
+    if isinstance(b, tuple):
+        b = b[-1]
+    return (0.5 * (b[0] + b[2]), 0.5 * (b[1] + b[3]),
+            b[2] - b[0], b[3] - b[1])
+
+
+def model_bbox(body):
+    """Model-space bounding box as ((xmin,ymin,zmin), (xmax,ymax,zmax)).
+
+    NX12 UF 把 UF_MODL_ask_bounding_box 封装在 ufs.ModlGeneral（不是
+    ufs.Modeling）。查不到就报错：直边回退只覆盖直线边，回转件带平面
+    时得到的包盒会明显偏小（P15 实测），宁可不给也不能给假值。
+    """
+    ufs = _ufs()
+    try:
+        r = ufs.ModlGeneral.AskBoundingBox(body.Tag)
+        return ((r[0], r[1], r[2]), (r[3], r[4], r[5]))
+    except Exception as exc:
+        raise RuntimeError(
+            "model_bbox: ModlGeneral.AskBoundingBox failed (%s); "
+            "no linear-edge fallback" % exc)
+
+
+def assembly_bbox(bodies):
+    """Union of model_bbox over several bodies (assembly drawing layout).
+
+    装配图包盒必须把所有组件（齿轮齿顶、端盖、轴伸）都算进来；
+    model_bbox/standard_views 只接受单个 body，装配图要显式传多个 body。
+    """
+    boxes = [model_bbox(b) for b in bodies]
+    if not boxes:
+        raise RuntimeError("assembly_bbox: empty body list")
+    return ((min(b[0][0] for b in boxes), min(b[0][1] for b in boxes),
+             min(b[0][2] for b in boxes)),
+            (max(b[1][0] for b in boxes), max(b[1][1] for b in boxes),
+             max(b[1][2] for b in boxes)))
+
+
+def content_bbox(view, mmin, mmax):
+    """Drawing-space extent of the view's CONTENT: the model bbox corners
+    mapped model->drawing.  This is the truth for layout and dimension
+    lanes; AskViewBorders is inflated by label margins (measured)."""
+    pts = [map_point(view, (x, y, z))
+           for x in (mmin[0], mmax[0])
+           for y in (mmin[1], mmax[1])
+           for z in (mmin[2], mmax[2])]
+    xs = [p[0] for p in pts]
+    ys = [p[1] for p in pts]
+    return (min(xs), min(ys), max(xs), max(ys))
+
+
+def pin_view(sheet, view, cx, cy, scale=1.0, tol=0.05, tries=3, bbox=None):
+    """Pin a view so its CONTENT centre lands at (cx, cy) sheet mm.
+
+    SetDrawingReferencePoint anchors the view's reference model point, which
+    is not the content centre, so each Set is followed by a measured
+    content-centre delta and one compensating Set (constant per view ->
+    converges; measured <0.05mm).  bbox = model_bbox() result, needed for
+    the content measurement.  Out-of-sheet moves are NOT rejected and NOT
+    rolled back (measured: four out-of-sheet Sets all returned normally, no
+    "Cannot move view off of the drawing"), so the caller must verify each
+    view's content box stays in-sheet itself."""
+    if bbox is None:
+        raise RuntimeError("pin_view: bbox=model_bbox() is required")
+    ufs = _ufs()
+    ufs.Draw.SetViewScale(view.Tag, float(scale))
+    tx, ty = float(cx), float(cy)
+    last = None
+    for _ in range(tries):
+        view.SetDrawingReferencePoint(NXOpen.Point3d(tx, ty, 0.0))
+        ufs.Draw.UpdateOneView(sheet.Tag, view.Tag)
+        b = content_bbox(view, bbox[0], bbox[1])
+        last = b
+        dx = cx - (b[0] + b[2]) / 2.0
+        dy = cy - (b[1] + b[3]) / 2.0
+        if abs(dx) <= tol and abs(dy) <= tol:
+            return b
+        tx, ty = tx + dx, ty + dy
+    raise RuntimeError("pin_view did not converge (delta %.3f, %.3f)"
+                       % (tx - (last[0] + last[2]) / 2.0,
+                          ty - (last[1] + last[3]) / 2.0))
+
+
+def save_model_view(part, name, rows):
+    """Persist a named MODEL view with the given basis.
+
+    rows = (screen X, screen Y, view Z) as 3-tuples in absolute coordinates.
+    Drafting views reject View.Rotate ("The view may not be rotated"), so a
+    side route is needed; UF TransformEntities does work on solids in batch
+    (16-float matrix; the effect only shows after the next update, so reading
+    a bbox before that looks like a silent no-op), and this model-view route
+    is the alternative that leaves the solid itself untouched.
+
+    Must run BEFORE any sheet/view exists: once a drawing view exists,
+    Views.SaveAs below raises "Internal error" (measured), i.e. the route is
+    dead exactly when a drawing is already open.
+    """
+    m = NXOpen.Matrix3x3()
+    m.Xx, m.Xy, m.Xz = [float(v) for v in rows[0]]
+    m.Yx, m.Yy, m.Yz = [float(v) for v in rows[1]]
+    m.Zx, m.Zy, m.Zz = [float(v) for v in rows[2]]
+    part.Views.WorkView.SetRotationTranslationScale(
+        m, NXOpen.Point3d(0.0, 0.0, 0.0), 1.0)
+    part.Views.SaveAs(part.Views.WorkView, name, True, True)
+    if part.Views.FindObject(name) is None:
+        raise RuntimeError("save_model_view: %s not saved" % name)
+
+
+def base_view(part, sheet, model_view_name):
+    """Create a base drafting view from a named model view."""
+    bv = part.DraftingViews.CreateBaseViewBuilder(
+        NXOpen.Drawings.BaseView.Null)
+    bv.SelectModelView.SelectedView = part.Views.FindObject(model_view_name)
+    bv.Commit()
+    bv.Destroy()
+    key = model_view_name.upper()
+    for v in sheet.GetDraftingViews():
+        if v.Name.split("@")[0].upper() == key:
+            return v
+    raise RuntimeError("base_view: %s not created" % model_view_name)
+
+
+def set_cjk_font(part):
+    """Point all lettering classes at the 'chinesef' NX stroke font.
+
+    The template's general/appended lettering already defaults to
+    'chinesef_fs' (CJK glyphs), so notes/tables/title block plot Chinese
+    without this call; dimension/tolerance text defaults to 'blockfont'
+    (Latin only), which is why the four classes are pointed at 'chinesef'
+    here.  'Arial Unicode MS' is not in the NX font table at all
+    (AddFont reports "Font name was not found in the character font
+    directory").  Lettering carries the font in `Cfw.Font` (integer id);
+    there is no `Lettering.Font`.
+    """
+    fonts = part.Fonts
+    fid = None
+    for i in range(1, fonts.GetLength() + 1):
+        try:
+            if fonts.GetFontName(i) == "chinesef":
+                fid = i
+                break
+        except Exception:
+            continue
+    if fid is None:
+        r = fonts.AddFont("chinesef", NXOpen.FontCollection.Type.Nx)
+        fid = r[0] if isinstance(r, tuple) else r
+    ap = part.Annotations.Preferences
+    lp = ap.GetLetteringPreferences()
+    for getter, setter in ((lp.GetGeneralText, lp.SetGeneralText),
+                           (lp.GetDimensionText, lp.SetDimensionText),
+                           (lp.GetAppendedText, lp.SetAppendedText),
+                           (lp.GetToleranceText, lp.SetToleranceText)):
+        lt = getter()
+        cfw = lt.Cfw
+        cfw.Font = int(fid)
+        lt.Cfw = cfw
+        setter(lt)
+    ap.SetLetteringPreferences(lp)
+    return int(fid)
+
+
+def standard_views(part, sheet, body=None, scale=1.0, gap=VIEW_GAP,
+                   margin=VIEW_MARGIN, size=None):
+    """Create the first-angle trio (FRONT above, TOP below, RIGHT beside),
+    pinned by CONTENT centre into the free area above the title block.
+    Call blank_datums() BEFORE this.  body defaults to the part's single
+    body.  size must match the sheet created by new_sheet (A4/A3).
+
+    NX 12's DrawingSheet DOES expose `Height` (measured 210 on the A4 sheet
+    in 20_drafting_views.py) and `Length`; there is no `Width`.  The size is
+    still an argument so the layout never depends on reading sheet state back.
+    Returns {"FRONT": view, "TOP": view, "RIGHT": view}."""
+    ufs = _ufs()
+    if size is None:
+        raise RuntimeError("standard_views: pass size= (A4/A3) matching new_sheet")
+    if size not in SHEET:
+        raise RuntimeError("standard_views: unsupported size %r" % (size,))
+    if body is None:
+        bodies = list(part.Bodies)
+        if len(bodies) != 1:
+            raise RuntimeError("standard_views: pass body= for multi-body "
+                               "parts (%d bodies)" % len(bodies))
+        body = bodies[0]
+    bbox = model_bbox(body)
+    sheet.Open()
+    svb = part.DraftingViews.CreateStandardViewsBuilder()
+    svb.Part = part
+    svb.ViewType = NXOpen.Drawings.StandardViewsBuilder.View.Base
+    svb.LayoutType = NXOpen.Drawings.StandardViewsBuilder.Type.FrontTopRight
+    svb.PlacementType = NXOpen.Drawings.StandardViewsBuilder.Placement.Center
+    svb.Autoscale = True
+    svb.Commit()
+    svb.Destroy()
+    sheet.Open()
+    keep = ("FRONT", "TOP", "RIGHT")
+    views = {}
+    for v in sheet.GetDraftingViews():
+        key = v.Name.split("@")[0].upper()
+        if key in keep:
+            views[key] = v
+    missing = [k for k in keep if k not in views]
+    if missing:
+        raise RuntimeError("standard views missing: %s" % (missing,))
+    # NX 12 DrawingSheet exposes Height/Length (no Width); the size is taken
+    # from the size= argument (matching new_sheet) instead of read back here
+    w, h = SHEET[size]
+    # measure each view's content size at the target scale
+    sizes = {}
+    for k in keep:
+        v = views[k]
+        ufs.Draw.SetViewScale(v.Tag, float(scale))
+        ufs.Draw.UpdateOneView(sheet.Tag, v.Tag)
+        b = content_bbox(v, bbox[0], bbox[1])
+        sizes[k] = (b[2] - b[0], b[3] - b[1])
+    c = NONBIND_C[size]
+    fx = BINDING_A + margin + sizes["FRONT"][0] / 2.0
+    fy = h - c - margin - sizes["FRONT"][1] / 2.0
+    pos = {
+        "FRONT": (fx, fy),
+        "TOP": (fx, fy - sizes["FRONT"][1] / 2.0 - gap
+                - sizes["TOP"][1] / 2.0),
+        "RIGHT": (fx + sizes["FRONT"][0] / 2.0 + gap
+                  + sizes["RIGHT"][0] / 2.0, fy),
+    }
+    for k in keep:
+        pin_view(sheet, views[k], pos[k][0], pos[k][1], scale, bbox=bbox)
+    return views
+
+
+def projected_views(part, sheet, parent, dx=0.0, dy=0.0):
+    """Orthographic views projected from `parent`; call UpdateOneView (done
+    here) before asking any view for visible objects, otherwise the count is
+    0 even though the view plots (measured)."""
+    ufs = _ufs()
+    sheet.Open()
+    made = {}
+    ref = parent_ref(parent)
+    for name, d in (("BELOW", (0.0, -1.0)), ("RIGHT", (1.0, 0.0))):
+        pos = [ref[0] + d[0] * float(dx), ref[1] + d[1] * float(dy)]
+        r = ufs.Draw.AddOrthographicView(
+            sheet.Tag, parent.Tag, getattr(ufs.Draw.ProjDir,
+                                           "PROJECT_" + name),
+            [float(pos[0]), float(pos[1])])
+        tag = _norm(r)
+        ufs.Draw.UpdateOneView(sheet.Tag, tag)
+        made[name] = tag
+    return made
+
+
+def parent_ref(view):
+    r = view.GetDrawingReferencePoint()
+    return (r.X, r.Y)
+
+
+def detail_rect(bx, by, half_w, half_h):
+    """Selection rectangle for AddDetailView around (bx,by).
+
+    The "circle radius ~= 0.83 x half-diagonal" relation this inflation was
+    derived from is NOT reproducible: AskViewBorders returns the selection
+    rectangle itself for a detail view (it never exposes the boundary circle),
+    so DETAIL_CIRCLE_FACTOR is an unverified heuristic kept only to avoid a
+    zero margin.  Confirm on the plotted sheet that the circle covers the
+    target area (references/drafting.md B.4).
+    """
+    # inflate uniformly with the heuristic factor; the margin must be
+    # confirmed on the sheet, not computed here
+    k = 1.0 / DETAIL_CIRCLE_FACTOR
+    return (bx - half_w * k, by - half_h * k,
+            bx + half_w * k, by + half_h * k)
+
+
+# ------------------------------------------------------- geometry discovery
+def hole_circles(body, radius=None, tol=0.01):
+    """Full-circle edges of cylindrical faces (hole openings), kept per (x,y)
+    at the highest z (the opening a top view sees).  radius filters out
+    blends; a radius-blind pick makes the dimension read the blend instead of
+    the hole (silent wrong value, per 19_drafting_annotation.py).
+    Returns [(edge, (x, y, z), radius)]."""
+    out = {}
+    for face in body.GetFaces():
+        if face.SolidFaceType != NXOpen.Face.FaceType.Cylindrical:
+            continue
+        try:
+            r = abs(_ufs().Modeling.AskFaceData(face.Tag)[4])
+        except Exception:
+            continue
+        if radius is not None and abs(r - float(radius)) > tol:
+            continue
+        for e in face.GetEdges():
+            try:
+                p1, p2 = e.GetVertices()
+            except Exception:
+                continue
+            if (abs(p1.X - p2.X) > 0.05 or abs(p1.Y - p2.Y) > 0.05
+                    or abs(p1.Z - p2.Z) > 0.05):
+                continue
+            key = (round(p1.X, 3), round(p1.Y, 3))
+            if key not in out or p1.Z > out[key][1]:
+                out[key] = (e, p1.Z, r)
+    return [(v[0], (k[0], k[1], v[1]), v[2]) for k, v in sorted(out.items())]
+
+
+def linear_edges(body):
+    """All straight edges as [(edge, p1, p2)] with vertex coordinates.
+
+    每条边只返回一次：面遍历会把共享边重复给出（P15 实测 4 条直边返回 8 条）。
+    直边由 Edge.SolidEdgeType（== Edge.EdgeType.Linear）判定，不能只看
+    两端点是否重合：短于整圆的圆弧/样条边两端点不同，会被误当直边。"""
+    out = []
+    seen = set()
+    for face in body.GetFaces():
+        for e in face.GetEdges():
+            if e.Tag in seen:
+                continue
+            seen.add(e.Tag)
+            if e.SolidEdgeType != NXOpen.Edge.EdgeType.Linear:
+                continue
+            try:
+                p1, p2 = e.GetVertices()
+            except Exception:
+                continue
+            if (abs(p1.X - p2.X) < 0.05 and abs(p1.Y - p2.Y) < 0.05
+                    and abs(p1.Z - p2.Z) < 0.05):
+                continue
+            out.append((e, p1, p2))
+    return out
+
+
+def extreme_edge(edges, along, key, side):
+    """Pick the edge that runs along `along` ('x'/'y'/'z') and is extreme in
+    `key` coordinate ('min'/'max').  Model-side pick: in the TOP view an edge
+    along y at min x is the left outline, in FRONT an edge along x at max z
+    is the top outline."""
+    axis = {"x": 0, "y": 1, "z": 2}[along]
+    k = {"x": 0, "y": 1, "z": 2}[key]
+    best = None
+    for e, p1, p2 in edges:
+        d = [abs(p2.X - p1.X), abs(p2.Y - p1.Y), abs(p2.Z - p1.Z)]
+        span = max(d)
+        if span < 0.05 or d[axis] < 0.9 * span:
+            continue
+        val = (p1.X, p1.Y, p1.Z)[k]
+        if best is None or (side == "min" and val < best[1]) \
+                or (side == "max" and val > best[1]):
+            best = (e, val, p1, p2)
+    if best is None:
+        raise RuntimeError("extreme_edge: no edge along %s for %s %s"
+                           % (along, key, side))
+    return best
+
+
+def map_point(view, model_xyz):
+    """Map a model point to drawing space via ufs.View.MapModelToDrawing.
+
+    Accepts NXOpen.Point3d or any (x, y, z) sequence.  There is deliberately
+    NO fallback: a guessed affine formula (ref + xyz) ignores projection,
+    scale and view centre, so it returns plausible-looking but wrong sheet
+    coordinates and silently corrupts every dimension/BOM lane built on it.
+    """
+    ufs = _ufs()
+    if hasattr(model_xyz, "X"):
+        xyz = (float(model_xyz.X), float(model_xyz.Y), float(model_xyz.Z))
+    else:
+        xyz = (float(model_xyz[0]), float(model_xyz[1]),
+               float(model_xyz[2]))
+    r = ufs.View.MapModelToDrawing(view.Tag, list(xyz))
+    cand = r[1] if isinstance(r, tuple) else r
+    if not hasattr(cand, "__len__") or len(cand) < 2:
+        raise RuntimeError("map_point: unexpected MapModelToDrawing result %r"
+                           % (r,))
+    return (float(cand[0]), float(cand[1]))
+
+
+# ----------------------------------------------------------------- dimensions
+def _assoc_obj(edge, view, assoc, model_xyz):
+    ufs = _ufs()
+    xy = map_point(view, model_xyz)
+    o = ufs.Drf.Object()
+    ufs.Drf.InitObjectStructure(o)
+    o.ObjectAssocType = getattr(NXOpen.UF.Drf.AssocType, assoc)
+    o.ObjectTag = edge.Tag
+    o.ObjectViewTag = view.Tag
+    o.AssocDwgPos = [float(xy[0]), float(xy[1])]
+    return o, xy
+
+
+def dim_text_box(center_xy, text, size=TEXT_DIM):
+    """Sheet-space box of a dimension text in the NX stroke font.
+
+    chinesef at size 3.5: advance 3.81 mm per glyph including the leading
+    diameter sign and its space, visual box height 7.0 mm.  `text` is the
+    full displayed string, e.g. u"<O> 105,4".
+    Returns (x0, y0, x1, y1); use box_overlap() to test placement.
+    """
+    k = float(size) / TEXT_DIM
+    w = 3.81 * len(text) * k
+    h = 7.0 * k
+    return (float(center_xy[0]) - w / 2.0, float(center_xy[1]) - h / 2.0,
+            float(center_xy[0]) + w / 2.0, float(center_xy[1]) + h / 2.0)
+
+
+def box_overlap(a, b, gap=0.0):
+    """True when boxes a/b (x0,y0,x1,y1) overlap after adding `gap` to each."""
+    return not (a[2] + gap <= b[0] or b[2] + gap <= a[0] or
+                a[3] + gap <= b[1] or b[3] + gap <= a[1])
+
+
+def dim_between(view, a, b, lane_y=None, lane_x=None, horizontal=True):
+    """Linear dimension between two attachments.
+
+    a/b = (edge, assoc_type, model_point).  The dimension line sits at
+    lane_y (horizontal dim) or lane_x (vertical dim) in sheet mm — pass
+    content_bbox() based values (not view_bbox, which is inflated by the
+    view label), e.g. bbox bottom - LANE_FIRST.
+
+    WARNING (measured): on assembly-instance edges + section
+    views, END_POINT attachments can silently pick the wrong endpoint
+    (200 -> 200.2, 140 -> 136.3) even with two different edges and explicit
+    AssocDwgPos.  Always verify the rendered value in the PDF text layer;
+    do not assume it equals the model bbox difference."""
+    ufs = _ufs()
+    oa, xy_a = _assoc_obj(a[0], view, a[1], a[2])
+    ob, xy_b = _assoc_obj(b[0], view, b[1], b[2])
+    txt = ufs.Drf.Text()
+    if horizontal:
+        org = [(xy_a[0] + xy_b[0]) / 2.0, float(lane_y), 0.0]
+        r = ufs.Drf.CreateHorizontalDim(oa, ob, txt, org)
+    else:
+        org = [float(lane_x), (xy_a[1] + xy_b[1]) / 2.0, 0.0]
+        r = ufs.Drf.CreateVerticalDim(oa, ob, txt, org)
+    return _norm(r)
+
+
+def dim_diameter(view, edge, center_model, org_xy):
+    """Diameter callout with a leader landing at org_xy (sheet mm)."""
+    ufs = _ufs()
+    o, _xy = _assoc_obj(edge, view, "ARC_CENTER", center_model)
+    txt = ufs.Drf.Text()
+    r = ufs.Drf.CreateDiameterDim(o, txt, [float(org_xy[0]),
+                                           float(org_xy[1]), 0.0])
+    return _norm(r)
+
+
+def quantity_label(part, view, edge, center_model, org_xy, text):
+    """Quantity callout for a group of identical features (GB/T 4458.4-2003
+    group elements): one leader label "2x<O>10" instead of one dim_diameter
+    per hole.  A diameter dim CAN also carry a count prefix (AppendedText
+    SetBeforeText, drafting-annotation.md §4b); the label route is used here
+    for the GB group-element style.
+
+    edge = the real circle edge in `view`, center_model = its centre in
+    model mm (the leader lands there, mapped to sheet mm), org_xy = text
+    position in sheet mm.  Lettering forced to TEXT_DIM (UF CreateLabel
+    inherits the global general-text height, default 5.0, uncontrolled).
+    Returns the label object."""
+    _o, xy = _assoc_obj(edge, view, "ARC_CENTER", center_model)
+    bundle = part.Annotations.NewLeaderBundle()
+    try:
+        bundle.NumberOfLeaders = 1   # must precede SetLeaderData (§5 ⚠)
+    except Exception:
+        pass
+    bundle.SetLeaderData(0, NXOpen.Annotations.LeaderAttachment.Screen,
+                         edge, view, NXOpen.Point3d(float(xy[0]),
+                                                    float(xy[1]), 0.0),
+                         0.0, [])
+    label = part.Annotations.CreateLabel(
+        [text], NXOpen.Point3d(float(org_xy[0]), float(org_xy[1]), 0.0),
+        None, None, None, bundle)
+    if label is None:
+        raise RuntimeError("gb_drawing: CreateLabel returned None")
+    lp = label.GetLetteringPreferences()
+    g = lp.GetGeneralText()
+    g.Size = TEXT_DIM
+    lp.SetGeneralText(g)
+    label.SetLetteringPreferences(lp)
+    return label
+
+
+# ---------------------------------------------------------------- centerlines
+def centermark(part, view, edge, center_model):
+    cmb = part.Annotations.Centerlines.CreateCenterMarkBuilder(
+        NXOpen.Annotations.CenterMark.Null)
+    cmb.Locations.Add(edge, view, NXOpen.Point3d(
+        float(center_model[0]), float(center_model[1]),
+        float(center_model[2])))
+    r = cmb.Commit()
+    cmb.Destroy()
+    return r
+
+
+def centerline_by_points(part, view, edge_a, pt_a, edge_b, pt_b):
+    c2 = part.Annotations.Centerlines.CreateCenterline2dBuilder(
+        NXOpen.Annotations.Centerline2d.Null)
+    c2.Type = c2.Types.ByPoints
+    c2.Point1.SetValue(edge_a, view, NXOpen.Point3d(
+        float(pt_a[0]), float(pt_a[1]), float(pt_a[2])))
+    c2.Point2.SetValue(edge_b, view, NXOpen.Point3d(
+        float(pt_b[0]), float(pt_b[1]), float(pt_b[2])))
+    r = c2.Commit()
+    c2.Destroy()
+    return r
+
+
+# -------------------------------------------------------------------- export
+def export_pdf(part, sheet, path):
+    """Plot one sheet to PDF (PrintPDFBuilder; measured).
+
+    NX12 raises NXException "One or more sheets are not in the displayed
+    part." at Commit when the sheet belongs to another display part
+    (measured), so the owner is checked here to fail before the builder is
+    created.  One SetSheets call produces ONE PDF (possibly multi-page), not
+    one file per sheet."""
+    import os
+    owner = sheet.OwningPart
+    if owner is None or int(owner.Tag) != int(part.Tag):
+        raise RuntimeError(
+            "export_pdf: sheet %r does not belong to part %r"
+            % (getattr(sheet, "Name", "?"), getattr(part, "Name", "?")))
+    if os.path.exists(path):
+        os.remove(path)
+    pdfb = part.PlotManager.CreatePrintPdfbuilder()
+    pdfb.SourceBuilder.SetSheets([sheet])
+    pdfb.Colors = NXOpen.PrintPDFBuilder.Color.BlackOnWhite
+    pdfb.Size = NXOpen.PrintPDFBuilder.SizeOption.FullScale
+    pdfb.Units = NXOpen.PrintPDFBuilder.UnitsOption.Metric
+    pdfb.Scale = 1.0
+    pdfb.Filename = path
+    pdfb.Commit()
+    pdfb.Destroy()
+    if not os.path.exists(path):
+        raise RuntimeError("export_pdf: %s was not written" % (path,))
+    return path
+
+
+def scale_text(s):
+    """1.0 -> '1:1', 2.5 -> '2.5:1', 0.5 -> '1:2' (reference sheet uses '2.5:1')."""
+    s = float(s)
+    if abs(s - 1.0) < 1e-9:
+        return "1:1"
+    if s > 1.0:
+        return ("%g:1" % s)
+    return "1:%g" % (1.0 / s)

@@ -1,0 +1,34 @@
+cff-version: 1.2.0
+message: "Please cite the release/commit used and the relevant upstream components."
+type: software
+title: "NX12 Automation Toolkit: MCP and Journal Skill"
+version: "v1.0.0"
+date-released: "2026-11-10"
+url: "https://github.com/HaipaKabuto/nx12-mcp-toolkit"
+repository-code: "https://github.com/HaipaKabuto/nx12-mcp-toolkit"
+abstract: "Community NX12 MCP adaptation and a separately licensed NXOpen journal skill; tested scope and limitations are documented. Siemens software and SDK are not included."
+authors:
+  - name: "HaipaKabuto"
+references:
+  - type: software
+    title: "NX_MCP-Enhanced"
+    authors:
+      - name: "kongbaic"
+    repository-code: "https://github.com/kongbaic/NX_MCP-Enhanced"
+  - type: software
+    title: "NX_MCP"
+    authors:
+      - name: "DreamEnding"
+    repository-code: "https://github.com/DreamEnding/NX_MCP"
+  - type: software
+    title: "nxopen-journal"
+    authors:
+      - name: "EVOL233awa"
+    version: "1.5.0"
+    repository-code: "https://github.com/EVOL233awa/nxopen-journal"
+    commit: "c0b1daf8a0c4c646f9e59788557c8cf3fd1cd689"
+  - type: software
+    title: "CAD-Agent-Hub"
+    authors:
+      - name: "Cai-aa"
+    repository-code: "https://github.com/Cai-aa/CAD-Agent-Hub"

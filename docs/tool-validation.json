@@ -1,0 +1,554 @@
+{
+  "validation_date": "2026-11-10",
+  "nx_version": "12.0.2.9",
+  "adapter_revision": "v12",
+  "counts": {
+    "PASS": 77,
+    "FAIL": 0,
+    "SKIP": 0,
+    "UNSUPPORTED": 0
+  },
+  "method": "Real standard-MCP calls plus native geometric/state assertions and actual drawing/viewport review where required. Registration, compilation and RPC success alone were not acceptance.",
+  "privacy": "Raw personal paths, configuration and logs are intentionally not part of this public summary.",
+  "tools": [
+    {
+      "tool": "nx_status",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 344,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_create_part",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 19,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_open_part",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 57,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_save_part",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 33,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_close_part",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 40,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_export_step",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 1,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_list_sketches",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 2,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_list_bodies",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 35,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_list_features",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 33,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_list_edges",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 12,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_list_faces",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 102,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_create_sketch",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 23,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_sketch_line",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 2,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_sketch_rectangle",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 19,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_sketch_circle",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 3,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_sketch_arc",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 1,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_finish_sketch",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 23,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_extrude",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 22,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_hole",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 14,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_counterbore_hole",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 1,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_countersink_hole",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 2,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_shell",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 1,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_edge_blend",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 8,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_chamfer",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 1,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_unite",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 3,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_revolve",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 2,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_mirror",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 1,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_linear_pattern",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 2,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_circular_pattern",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 1,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_undo",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 1,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_fit_view",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 4,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_release",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 2,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_create_drawing_sheet",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 4,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_create_projected_view",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 1,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_list_drawing_sheets",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 1,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_list_drafting_views",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 14,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_list_dimensions",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 2,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_list_annotations",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 3,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_create_radius_dimension",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 1,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_delete_annotation",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 1,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_export_pdf",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 7,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_create_roughness",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 1,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_create_title_block",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 1,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_set_attribute",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 15,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_list_attributes",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 2,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_measure_distance",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 1,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_create_note",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 5,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_create_diameter_dimension",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 1,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_update_views",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 4,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_create_dimension",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 3,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_assembly_create",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 4,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_assembly_add",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 11,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_assembly_list",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 15,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_assembly_transform",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 5,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_assembly_remove",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 2,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_assembly_replace",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 1,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_assembly_component_geometry",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 5,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_assembly_constraint",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 7,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_assembly_constraints",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 4,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_assembly_delete_constraint",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 1,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_assembly_solve",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 1,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_assembly_save",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 5,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_assembly_interference",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 7,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_drafting_add_model_view",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 3,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_drafting_create_table",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 5,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_drafting_update_table",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 1,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_drafting_list_tables",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 7,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_drafting_center_mark",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 4,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_drafting_centerline",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 1,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_drafting_detail_view",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 1,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_drafting_section_view",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 1,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_drafting_gdt",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 1,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_drafting_balloon",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 4,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_drafting_export_cad",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 2,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_drawing_plan",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 2,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_model_check",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 1,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    },
+    {
+      "tool": "nx_model_from_plan",
+      "status": "PASS",
+      "adapter_revision": "v12",
+      "successful_rpc_count": 1,
+      "scope": "Representative test case only; see VALIDATION.md for conditions and limitations."
+    }
+  ]
+}

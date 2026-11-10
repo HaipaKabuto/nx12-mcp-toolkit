@@ -1,0 +1,27 @@
+{
+  "install_in_new_venv": "PASS",
+  "primary_dependency_pins": {
+    "mcp": "2.3.0",
+    "pydantic": "2.14.2",
+    "pywin32": "312"
+  },
+  "package_source": "existing public PyPI mirror configuration; primary PyPI metadata verified",
+  "build_three_CSharp_sources_with_local_NX12_SDK": "PASS",
+  "stdio_through_published_Python_entry": "PASS",
+  "registered_tools": 77,
+  "registered_tool_names_match_documented_catalog": true,
+  "native_NX12_status_connected": "PASS",
+  "freshly_built_Loader_launched_in_new_NX_session": true,
+  "minimal_model_save_close_reopen": "PASS",
+  "minimal_model_dimensions_mm": [
+    20,
+    30,
+    10
+  ],
+  "minimal_model_volume_mm3": 6000,
+  "minimal_model_body_count": 1,
+  "minimal_model_calls": 12,
+  "public_source_changes": "Attribution comments, corrected license metadata, portable stdio/start scripts, removal of a machine-specific STEP installation fallback; geometry algorithms unchanged.",
+  "scope": "Fresh Python install/compile/STDIO discovery, new NX12 session using the fresh build, and one independent minimal model save/reopen on one Windows host. This is not a new all-tool geometry regression or a guarantee for every machine.",
+  "skill_repo_static_check": "CHECK_REPO_OK"
+}

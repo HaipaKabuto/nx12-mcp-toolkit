@@ -1,0 +1,314 @@
+# 有限元域：CAD → FEM → SIM → 求解 → 后处理（NX 12 批处理）
+
+> 先读 SKILL.md。完整示例 `scripts/tests/09_fea_static.py`（手算校验，BENCH_PASS）。
+
+## 0. 文件体系与前置
+
+- 链：.prt →（`_i.prt` 自动创建）→ .fem（网格/材料）→ .sim（BC/解算方案）；模板 `%NX_HOME%\SIMULATION\templates\`：`FemNxNastranMetric.fem` / `SimNxNastranMetric.sim`（公制 NX Nastran）。
+- 许可：`nx_masterfem`、`nx_design_sim`、NX Nastran（`%NX_HOME%\NXNASTRAN\bin\nastran.exe`）。
+- 求解器/分析类型：`"NXNASTRAN"`/`"STRUCT"`（FinalizeCreation 入参）；读回 `('NX NASTRAN', 'Structural')`。
+- 单位制 mm-N-s-MPa（应力 MPa、力 N）；Steel E=206940 MPa、密度 7.83e-9 tonne/mm³（重力载荷注意）；上游/手算载荷（压紧力、摩擦扭矩、转速）需换算单位。⚠ **API 读回的是内部基准单位**：`GetPropTable().GetScalarWithDataPropertyValue("YoungsModulus")` 读回 206940000（mN/mm²）、密度 7.829e-06（kg/mm³），换算到 MPa 要 /1000；`MAT1` 卡上写作 `2.0694+8`。
+
+## 0a. 保存 .fem/.sim
+
+```python
+fem.Save(NXOpen.BasePart.SaveComponents.FalseValue,
+         NXOpen.BasePart.CloseAfterSave.FalseValue)          # 只写 .fem
+fem.IdealizedPart.Save(NXOpen.BasePart.SaveComponents.FalseValue,
+                       NXOpen.BasePart.CloseAfterSave.FalseValue)  # 单独写 _i.prt
+sim.Save(NXOpen.BasePart.SaveComponents.FalseValue,
+         NXOpen.BasePart.CloseAfterSave.FalseValue)          # 写 .sim
+assert os.path.getsize(fem_path) > 0 and os.path.getsize(sim_path) > 0
+```
+
+- `session.Parts.Work` 与 `session.Parts.Display` 对 .fem/.sim 都抛 `The part file is not a .prt part`；部件句柄只保留 `FileNew().Commit()` 的返回值。
+- `fem.Save()` **只写 .fem，不写理想化件**：`fem.Save()` 之后 `save_i.prt` 不存在，补 `fem.IdealizedPart.Save(...)` 才落盘。`fem.IdealizedPart` 是普通 `Part`，`.FullPath` 指向 `_i.prt`。
+- 返回值是 `NXOpen.PartSaveStatus` 对象（不是错误清单）；落盘判据用 `os.path.getsize > 0`。
+- `ufs.Part.Save()` 保存**显示部件**：新建 sim 后显示件是 sim，能写 .sim；但语义隐式，显式用 `sim.Save(...)`。
+- 重开：`part, status = session.Parts.Open(path)`（返回元组）。.fem 已作为 .sim 的依赖加载时再 `Open` 报 `File already exists`，先 `ufs.Part.CloseAll()`。
+
+## 1. CAD → FEM
+
+```python
+fn = session.Parts.FileNew()
+fn.Units = NXOpen.Part.Units.Millimeters
+fn.TemplateFileName = "FemNxNastranMetric.fem"   # 扩展名必须 .fem
+fn.NewFileName = "model.fem"; fn.UseBlankTemplate = False
+fem = fn.Commit(); fn.Destroy()                  # 直接返回 FemPart；NX12 无 FemPart.Cast
+fem.FinalizeCreation(
+    cad_part, "model_i", NXOpen.CAE.FemPart.UseBodiesOption.AllBodies, [],
+    fem.NewFemSynchronizeOptions(), "NXNASTRAN", "STRUCT",
+    NXOpen.CAE.BaseFemPart.AxisymAbstractionType.NotSet, ["desc"], False)
+fem.GetSolverAndAnalysisType()
+# ⚠ 幂等清理连理想化件一起删：model.fem、model_i.prt（及关联 .prt）
+```
+
+基名全目录唯一（跨扩展名亦然）：`cantilever_cad.prt` / `cantilever.fem` / `cantilever_i.prt` / `cantilever_sim.sim`；否则 `A part file with the same base name already exists.`
+
+## 2. 材料 + PSOLID + 实体网格收集器
+
+```python
+ppt = fem.PhysicalPropertyTables.CreatePhysicalPropertyTable(
+    "PSOLID", "NX NASTRAN - Structural", "NX NASTRAN", "PSOLID1", 0)   # 第 5 参=label，0=自动取号
+steel = fem.MaterialManager.PhysicalMaterials.LoadFromNxlibrary("Steel")
+ppt.PropertyTable.SetMaterialPropertyValue("material", False, steel)
+col_b = fem.BaseFEModel.MeshManager.CreateCollectorBuilder(
+    NXOpen.CAE.MeshCollector.Null, "Solid")      # None 不行，必须 .Null
+col_b.CollectorName = "SteelSolid"
+col_b.PropertyTable.SetNamedPropertyTablePropertyValue("Solid Property", ppt)
+collector = col_b.Commit(); col_b.Destroy()
+```
+
+⚠ **`label`（第 5 参）在同一 .fem 件内必须唯一**：两处写死 `2` 时第一张表成功、第二张立即报 `Fifth parameter is invalid`（实体 + 壳混模必踩）。给 `0` 自动取号，或自己保证唯一。
+
+⚠ 无单位量（ν）传 `NXOpen.Unit.Null`，传 `None` 报什么取决于 unit 在签名里的位置：当第 2 参（`FieldExpression.EditFieldExpression(expr, None, [], False)`）报 `Second parameter is invalid. Expecting NXOpen.Unit type, found NoneType.`，当第 3 参（`SetBaseScalarWithDataPropertyValue(name, value, None)`）报 `No overload matches these arguments`。材料力学属性名 `YoungsModulus`/`PoissonsRatio`/`MassDensity` **建在材料属性表上**（`steel.GetPropTable()`，327 项，子串命中 `YoungsModulusControl` 等 8 条，必须全名精确匹配）——**PSOLID 表的 9 项里一个材料力学量都没有**（`material / material orientation* / Integration Network / Stress Output Location / Integration Scheme / Element Type Structural / Element Type Fluid`），照抄到 PSOLID 上报 `A Property with this name could not be found.`。
+
+## 3. CAE 几何枚举（体/面）
+
+```python
+body = fem.FindObject("CAE_Body(1)")             # CAEBody 无 GetFaces
+faces = []
+for i in range(1, 60):
+    try: faces.append(fem.FindObject("CAE_Body(1)|CAE_Face(%d)" % i))
+    except Exception: break                      # 越界即停，编号连续
+# 面法向仅原型面可用（实例面 GetUgfaces 内存违例）：
+ug = face.GetUgfaces()                           # CAEFace -> NXOpen.Face 桥
+d = ufs.Modeling.AskFaceData(ug[0].Tag)          # (type, point, dir_list, box, radius, ...)
+plane = (d[0] == 22); nz = d[2][2]               # dir 是 list 不是 Vector3d
+```
+
+## 3a. 2D 壳网格 + PSHELL（求解级标定见 §3a-2）
+
+```python
+ppt = fem.PhysicalPropertyTables.CreatePhysicalPropertyTable(
+    "PSHELL", "NX NASTRAN - Structural", "NX NASTRAN", "PSHELL1", 0)   # label 见 §2：同一 .fem 内必须唯一，0=自动取号
+steel = fem.MaterialManager.PhysicalMaterials.LoadFromNxlibrary("Steel")
+ppt.PropertyTable.SetMaterialPropertyValue("material", False, steel)
+cb = fem.BaseFEModel.MeshManager.CreateCollectorBuilder(NXOpen.CAE.MeshCollector.Null, "ThinShell")
+cb.CollectorName = "PTShell"
+cb.PropertyTable.SetNamedPropertyTablePropertyValue("Shell Property", ppt)
+col = cb.Commit(); cb.Destroy()
+
+face = fem.FindObject("CAE_Body(1)|CAE_Face(6)")
+mb = fem.BaseFEModel.MeshManager.CreateMesh2dBuilder(NXOpen.CAE.Mesh2d.Null)
+mb.SelectionList.Add(face)
+mb.ElementType.ElementDimension = NXOpen.CAE.ElementTypeBuilder.ElementType.Shell
+mb.ElementType.ElementTypeName = "CQUAD4"
+mb.CommitMesh(); mb.Destroy()
+```
+
+- 2D 用 `ElementType.Shell`+`CQUAD4`/`CTRIA3`；3D 用 `FreeSolid`+`CTETRA(10)`。`ElementType` 全表：`AnySolid/Beam/Connection/Contact/FreeSolid/Point/Pyramid/QuadShell/Shell/Spider/SweepSolid/SweepSolidWedge/TriaShell/Weld`（没有 `ThinShell`）。
+- ⚠ `.fem/.sim` 不能用 `Parts.Work`（`The part file is not a .prt part`），用 `fn.Commit()` 返回值。
+- ⚠ 壳厚必须在 PSHELL 表显式写 `element thickness`：**不写不是"厚度变默认、挠度差几个量级"，而是 Nastran 直接 `USER FATAL MESSAGE 4298 (EQD4S)` / `A CORNER POINT MEMBRANE THICKNESS HAS NOT BEEN SPECIFIED FOR ELEMENT WITH ID = 1`，150 行 FATAL、零结果**（后处理抛 `No results are found`），而 `.log` 尾部仍是 `NSEXIT: EXIT(0)`——只有 f06/后处理看得出失败。属性名先枚举 `GetPropertyNameByIndex(i)` + `GetPropertyCount()` → 13 项 `Plane Strain / material / bending material uses material / bending material / transverse shear material uses material / transverse shear material / membrane-bending coupling material / element thickness / bending coefficient / shear ratio / nonstructural mass / fiber distance 1 / fiber distance 2`。
+  写法：`SetBaseScalarWithDataPropertyValue("element thickness", "5.0", unit_mm)`，单位取 `fem.UnitCollection.FindObject("MilliMeter")`；读回 `GetScalarWithDataPropertyValue` → `(5.0, <Unit>)`。
+
+### 3a-2. 2D 壳的**求解级数值标定**
+
+整链：薄板体 → PSHELL 壳网格 → 端边固支 + 端边集中力 → SOL101 → 对照梁理论。
+
+算例：100×5 mm 板、t=5 mm、E=206940 MPa、短边 6 DOF 固支、对边 −Z 100 N；`I=b·t³/12`；b/L=0.05。SOL101 端部挠度 δ=FL³/(3EI) 与根部应力 σ=FL(t/2)/I 对梁理论的偏差**随网格尺寸分开看**：2 mm CQUAD4（比值 `ratio_d=0.9994`/`ratio_s=0.9871`，即挠度 −0.06%、根部 vM −1.29%）两向都 <2%；**20 mm CQUAD4（12 节点、dat 里只有 5 个单元）挠度 −1.24% 仍在 2% 内，但根部 von Mises 偏 −14.78%**——用粗网格同时声称"应力偏差 <2%"是错的，20 mm 那组只有挠度过得了，应力必须回到 2 mm 级网格。
+
+1. **薄板体**：`cad.Features.CreateBoundedPlaneBuilder(NXOpen.Features.BoundedPlane.Null)`；`BoundingCurves` 只读（not writable / `No profile selected`）→ `bp.BoundingCurves.AddToSection([rule], lines[0], NXObject.Null, NXObject.Null, helpPoint, Section.Mode.Create, False)`。仅 4 边板体可按边长认端边。
+2. **端边 BC/载荷挂 `CAE_Edge`**，过滤器 `GeomEdge`，目标经 `NXOpen.CAE.SetObject()`（`Obj`/`SubType`/`SubId`）；`CAEEdge` 只有 `GetLength()`，按 `abs(len-B)<0.5` 挑。sim 用实例边：`sim.ComponentAssembly.RootComponent.GetChildren()[0].FindObject("CAE_Body(1)|CAE_Edge(n)")`。
+3. **挂 `Structural Output Requests`**，否则 `No results found`。结果类型：`Displacement - Nodal/Rotation - Nodal/Stress - Elemental/Stress - Element-Nodal/Reaction Force - Nodal/Reaction Moment - Nodal`。
+
+判别力：理论值不得随错误厚度重算。t=2.5 对 5 mm：挠度比约 8、应力比约 3.9，`BENCH_SHELL_*` 应 FAIL。
+
+## 4. CTETRA(10) 四面体网格
+
+```python
+b = fem.BaseFEModel.MeshManager.CreateMesh3dTetBuilder(NXOpen.CAE.Mesh3d.Null)
+b.SelectionList.Add(body)
+b.ElementType.ElementDimension = NXOpen.CAE.ElementTypeBuilder.ElementType.FreeSolid
+b.ElementType.ElementTypeName = "CTETRA(10)"
+b.ElementType.DestinationCollector.ElementContainer = collector
+b.ElementType.DestinationCollector.AutomaticMode = False
+unit_mm = fem.UnitCollection.FindObject("MilliMeter")
+# 先 GetPropertyCount()/GetPropertyNameByIndex(i) 枚举属性名，再设值（属性名跨版本漂移）
+b.PropertyTable.SetBaseScalarWithDataPropertyValue(
+    "quad mesh overall edge size", "4", unit_mm)     # NX12 有此名；无 "automatic size option bool"
+b.CommitMesh(); b.Destroy()
+fem.BaseFEModel.MeshManager.GetNodeStatus()          # [TotalNum=..., LowLabel, HighLabel]
+```
+
+## 5. SIM 文件 + SOL101 解算方案
+
+```python
+fn = session.Parts.FileNew()
+fn.Units = NXOpen.Part.Units.Millimeters
+fn.TemplateFileName = "SimNxNastranMetric.sim"
+fn.NewFileName = "model_sim.sim"; fn.UseBlankTemplate = False
+sim = fn.Commit(); fn.Destroy()
+sim.FinalizeCreation(fem, -1, ["desc"])              # -1 = USE_ORIGINAL 层
+sol = sim.Simulation.CreateSolution(
+    "NX NASTRAN", "Structural", "SESTATIC 101 - Single Constraint",
+    "Solution 1", NXOpen.CAE.SimSimulation.AxisymAbstractionType.NotSet)
+if sol.StepCount == 0: sol.CreateStep(0, True, "Subcase - Statics 1")  # NX12 3 参重载
+# 先挂输出请求；不挂则 dat 里没有 DISPLACEMENT/STRESS 卡片、op2 里没有结果块
+# （文件非空——2.35 MB，但 OUG/OES/OQG token 计数为 0）、后处理 No results found
+mo = sim.ModelingObjectPropertyTables.CreateModelingObjectPropertyTable(
+    "Structural Output Requests", "NX NASTRAN - Structural", "NX NASTRAN",
+    "Structural Output Requests1", 2)
+sol.PropertyTable.SetNamedPropertyTablePropertyValue("Output Requests", mo)
+# ⚠ BC 目标用 sim 树 FEM 组件实例面；原型面报
+#   "Selected objects are not in the same file as the Targetset"
+comp = sim.ComponentAssembly.RootComponent.GetChildren()[0]
+occ_face = comp.FindObject("CAE_Body(1)|CAE_Face(%d)" % i)   # 无需 PROTO# 前缀
+```
+
+## 6. 边界条件（描述符 + SetObject + TargetSetManager）
+
+```python
+def face_objs(faces):
+    objs = []
+    for f in faces:
+        so = NXOpen.CAE.SetObject(); so.Obj = f
+        so.SubType = NXOpen.CAE.CaeSetObjectSubType.NotSet; so.SubId = 0
+        objs.append(so)
+    return objs
+
+# 固定约束用 "UserDefinedDisplacementConstraint" + DOF1..6 全 0
+# （"FixedConstraint" 报 Invalid LBC neutral name；"-777777"=自由）
+# ⚠ -777777 真的放自由：SPC 卡的 DOF 位被剔除；但放开唯一的轴向约束后模型成
+#   机构，直接 FATAL 9137 (SEKRRS) / EXCESSIVE PIVOT RATIOS IN MATRIX KLL，
+#   而 .log 仍是 EXIT(0)——所以"放开某个 DOF"必须配一条别处的约束去固定刚体位移
+b = sim.Simulation.CreateBcBuilderForConstraintDescriptor(
+    "UserDefinedDisplacementConstraint", "Fixed(1)", 1)
+b.TargetSetManager.SetTargetSetMembers(
+    0, NXOpen.CAE.CaeSetGroupFilterType.GeomFace, face_objs(fixed_faces))
+u_mm = sim.UnitCollection.FindObject("MilliMeter"); u_deg = sim.UnitCollection.FindObject("Degrees")
+for dof, unit in (("DOF1", u_mm), ("DOF2", u_mm), ("DOF3", u_mm),
+                  ("DOF4", u_deg), ("DOF5", u_deg), ("DOF6", u_deg)):
+    fe = b.PropertyTable.GetScalarFieldPropertyValue(dof)
+    fe.EditFieldExpression("0", unit, [], False)
+    b.PropertyTable.SetScalarFieldPropertyValue(dof, fe)
+b.BcName = "FixedEnd"; b.DestinationFolder = NXOpen.CAE.SimLbcFolder.Null
+b.CommitAddBc(); b.Destroy()
+
+# 面力（默认 Total 分布，单位 N）：
+lb = sim.Simulation.CreateBcBuilderForLoadDescriptor(
+    "ComponentForceField", "Force(1)", 2)
+lb.TargetSetManager.SetTargetSetMembers(
+    0, NXOpen.CAE.CaeSetGroupFilterType.GeomFace, face_objs(tip_faces))
+u_n = sim.UnitCollection.FindObject("Newton")
+exprs = [sim.Expressions.CreateSystemExpressionWithUnits("0", u_n),
+         sim.Expressions.CreateSystemExpressionWithUnits("0", u_n),
+         sim.Expressions.CreateSystemExpressionWithUnits("-500", u_n)]
+vw = sim.FindObject("FieldManager").CreateVectorFieldWrapperWithExpressions(exprs)
+lb.PropertyTable.SetVectorFieldWrapperPropertyValue("CartesianMagnitude", vw)
+lb.CommitAddBc(); lb.Destroy()
+# ⚠ distributionType 非 string（SetStringPropertyValue 报 "does not support this
+#   interface"），默认即 Total。
+# 过滤器：GeomFace/GeomBody/GeomVertex/GeomEdge/Node（CaeSetGroupFilterType）
+```
+
+## 6a. 解算方案家族全表 + 模态 SOL103
+
+**描述符真名只能从 NX 模板读，不能猜**：`%NX_HOME%\SIMULATION\templates\SimNxNastran*.sim`，正则 `[A-Z]{2,10} 1\d\d - ...` 抽取：
+
+```bash
+python -c "
+import os, re
+p = os.path.join(os.environ.get('NX_HOME', r'D:\UG-NX12'),
+                 'SIMULATION', 'templates', 'SimNxNastranEnglish.sim')
+b = open(p, 'rb').read()
+print(sorted({m.group().decode('latin-1') for m in re.finditer(rb'[A-Z]{2,10} 1[0-9]{2} - [ -~]{5,45}', b)}))"
+```
+
+全集：`SESTATIC 101 - {Single,Multi} Constraint / Adaptive / Superelement`、`NLSTATIC 106 - {Single,Multi} Constraint`、`SEMODES 103 - {Flexible Body,Response Simulation,Superelement}`、`SEDFREQ 108 - Direct FRF`、`SEMFREQ 111 - Modal FRF`。
+
+```python
+# 模态 SOL 103：描述符就是裸的 "SEMODES 103"，无 " - Normal Modes" 后缀
+sol = sim.Simulation.CreateSolution(
+    "NX NASTRAN", "Structural", "SEMODES 103", "SolModal",
+    NXOpen.CAE.SimSimulation.AxisymAbstractionType.NotSet)
+if sol.StepCount == 0: sol.CreateStep(0, True, "Subcase")
+sol.GetDisplayNameOfSolutionType()   # → 'SOL 103 Real Eigenvalues'
+sol.GetDisplayNameOfSolverType()     # → 'NX Nastran'
+sol.SolverType                       # → 'NX NASTRAN'
+```
+
+⚠ `SEMODAL 103 - Normal Modes` 不存在；`NXException: Error number: 1775003` 对垃圾名/错名同号，不能判别；用正对照 `SESTATIC 101 - Single Constraint`。
+
+⚠ **BC 描述符有效性绑定当前激活方案，新建方案立即激活**：模态方案后建载荷 BC 报 `Invalid LBC neutral name`，先 `sim.Simulation.ActiveSolution = <静态方案>`。错误抛在 `CreateBcBuilderFor{Load,Constraint}Descriptor`（非 `CommitAddBc`）；第 3 参是载荷标签（int），非方案选择器。
+
+- 静态方案下**可建**的描述符（名字照抄模板/枚举，`Invalid LBC neutral name` 只说明名字不在当前激活方案的集合里）：约束侧至少 8 个——`UserDefinedDisplacementConstraint`、`NormalEnforcedDisplacementConstraint`、`ComponentEnforcedDisplacementConstraint`、`fixedConstraint`、`pinnedConstraint`、`rollerConstraint`、`simplySupportedConstraint`、`symmetricConstraint`；载荷侧至少 4 个——`ComponentForceField`、`ComponentMomentField`、`ComponentGravityField`、`ComponentForce`。**不要**照"只有两个"去猜，力矩/重力/滚支/对称边界都是常用入口；也不要无脑遍历名字（`SEMODAL 103` 那类错名与垃圾名同报 `Error number: 1775003`，没有区分信息）。
+- BC 入口：`CreateBcBuilderForBc` / `…ForConstraintDescriptor` / `…ForLoadDescriptor` / `…ForSimulationObjectDescriptor` / `CreateAutoBcBuilder` / `CreateLoadSetBuilder` / `CreateConstraintSetBuilder`。
+
+## 7. 求解 + 后处理
+
+```python
+ufs.Part.Save()                                      # 求解前保存
+mgr = NXOpen.CAE.SimSolveManager.GetSimSolveManager(session)
+mgr.SolveChainOfSolutions([sol],
+    NXOpen.CAE.SimSolution.SolveOption.Solve,
+    NXOpen.CAE.SimSolution.SetupCheckOption.DoNotCheck,
+    NXOpen.CAE.SimSolution.SolveMode.Foreground)     # NX12 批处理同步求解
+# 产物：<sim名>-solution_<n>.{dat,f06,log,op2}（还有 .f04/.diag）
+# ⚠ .log 尾部的 EXIT(0) **不是完成判据**：失败件（壳厚缺失 USER FATAL 4298、
+#   机构 FATAL 9137）的 log 尾部与成功件逐字同形（NSEXIT: EXIT(0) +
+#   "Analysis complete  0"），SolveChainOfSolutions 的返回值也是无语义 3 元组
+#   （成功/失败前缀相同）。唯一可信判据是 .f06 的 FATAL 计数与后处理能否取到结果。
+
+rd, rn = sol.GetResultFile()                         # 19/19 次求解 rd 都是非空目录
+if not rd: sol.SetLocalResultFile(os.getcwd(), rn)   # 防御性：rd 为空串在本机未复现
+sres = session.ResultManager.CreateSolutionResult(sol)
+it = sres.GetLoadcases()[0].GetIterations()[0]
+rts = it.GetResultTypes()   # Displacement - Nodal / Stress - Element-Nodal / Reaction Force - Nodal ...
+
+def ask_max(rt_name, comp):                          # comp: Component.Magnitude / VonMises
+    rt = [t for t in rts if t.Name.lower() == rt_name.lower()][0]
+    rp = session.ResultManager.CreateResultParameters()
+    rp.SetGenericResultType(rt); rp.SetResultComponent(comp)
+    rp.MakeElementResult(False); rp.SetUnit(rt.AskDefaultUnitForComponent(comp))
+    ra = session.ResultManager.CreateResultAccess(sres, rp)
+    v = ra.AskMaximum()                              # 直接取极值，勿逐节点循环
+    session.ResultManager.DeleteResultAccess(ra); session.ResultManager.DeleteResultParameters(rp)
+    return v
+```
+
+⚠ 无 `SetShellSection`（NX12 实体结果不需要）；von Mises 用 `Component.VonMises`；应力类型名 **"Stress - Element-Nodal"**（非 Elemental-Nodal）；解引用 `DeleteResultAccess`/`DeleteResultParameters`（对象无 Delete）。
+
+⚠ **批处理求解与后处理**：
+1. PLOT 输出时数值只落 op2 不打印 f06（f06 仅 bulk echo + 求解摘要 + OLOAD/SPCFORCE 合力）；值级复核用 ResultAccess 或解析 op2。**具体读数从哪儿取见 §7a**。
+2. 中文工作目录**不影响**后处理：中文目录下 `SetLocalResultFile`/ResultManager 均正常（读数与 ASCII 目录逐位相同），Python 文件操作也正常。原"改走 f06 文本提取"的说法不成立——f06 里没有任何数值表（见 §7a）。
+3. 直调 nastran.exe 返回码 1 可能结果完整 → 以 f06 内容判定。
+4. SOL103 deck 提交前查 `EIGRL` 体卡与 `METHOD`：Lanczos 提取对象成功且无报错时两卡仍可能不导出，缺卡即 FATAL 9056、0 阶；文本补卡 + 直调求解，NX 自导出未验证。
+
+## 7a. 读数从哪儿取（先看这一节再写自检）
+
+**本技能既有用例的 `.f06` 里没有打印结果表**：只落 bulk echo + model summary，`D I S P L A C E M E N T` 表头命中 0（`MAXDISP=none`）。所以"数值只落 op2"要读成"f06 里连位移/应力表的表头都没有"。
+
+三条可行途径，按用途选：
+
+| 途径 | 出什么量 | 说明 |
+|---|---|---|
+| NX 后处理结果对象（`ResultManager` + 上面 `ask_max`，脚本内首选） | 位移/vM/支反力的极值，逐类型 | 键名：`VM_MAX_GLOBAL`（全局 vM 极值）、`CHECK_FORCE_BALANCE` 的 `sum_Z`（支反力合力，做力平衡自检） |
+| 自加 `PRINT` 输出请求后重跑求解器（要 f06 文本表时） | f06 里可读的 D I S P L A C E M E N T / S T R E S S 表 | 按表头定位：四面体应力表的 `CENTER` 与逐格 `X` 行末列是 von Mises（单位 kPa，÷1000 得 MPa），`Y`/`Z` 续行末列是方向余弦；位移表用 `D I S P L A C E M E N T   V E C T O R` 表头 |
+| 解析 `.op2`（要逐节点/逐单元原始值时） | 结果块 `OUG`（位移）/`OES`（应力）/`OQG`（支反力） | 不挂输出请求时 op2 仍非空但这三个 token 计数为 0，只能当"没有结果"的证据 |
+
+- **判据链**：求解是否成功看 `.f06` 的 FATAL 计数（0 才算过）+ 后处理能否取到结果；`.log` 的 `EXIT(0)` 和 `SolveChainOfSolutions` 返回值都无判别力（§7 的 ⚠）。
+- **手算对照仍要手算**：后处理只给读数，判据（δ/σ 与解析解的关系、带宽）见 §8/§9。
+
+## 8. FEA 工程师方法论
+
+1. **先手算后软件**：δ=FL³/3EI、σ=Mc/I、δ=FL/AE；偏差 >20% 查模型，<10% 谈精度。基准：δ 略高于梁理论（剪切变形），σ 峰值高于名义值（固定端集中，注明位置）。
+2. **单位制**：mm-N-s-MPa；面力默认 Total（整面合力）。
+3. **网格**：CTETRA(10) 默认（CTETRA4 过刚）；尺寸取关键特征/壁厚 1/2~1/4；h 加密（尺寸减半）变化 <5% 为收敛。
+4. **BC 远离关注区**（圣维南）：约束/集中载荷 1~2 倍特征长度内应力不可信；角点应力集中注明位置；取远端中段对比梁理论。
+5. **奇异性**：点载荷、锐角、约束角点随网格细化不收敛，不作判据；改用分布载荷/圆角/远端取值。
+6. **判定**：延性钢 von Mises vs 屈服（235/345 MPa），SF = 屈服/vM_max；位移查量级、方向、变形形状。峰值落在孔口/锐边时补 3~5 个低应力测点（耳座、板、支架），以测点邻域应力作强度判据，报告同时列出峰值并注明其不可用于判定。
+7. **验证闭环**：求解后自动读 Max 位移/vM 对比手算，容差内打印 BENCH_PASS/BENCH_FAIL。
+8. **网格前验 CAD**：modeling.md §3.5 测体积/质心（不符 = 布尔未融合或尺寸错）。
+
+## 9. FEA 交付自检清单
+
+- [ ] 手算解析解（公式+数值），FEA/手算比值 **0.9~1.4**（含剪切/圣维南余量）。⚠ 该带宽**判别力弱，不能单独当验收**：把钢的 E 打错 −20.3%（206940→165000）比值 1.2952 仍 PASS，本文自己劝退的 CTETRA4 件（0.9606）也 PASS，只有 E 错到 −27.5% 才掉出；下沿 0.9 只容忍 −10%、上沿 1.4 容忍 +40%，本身不对称。**必须配独立判据**：材料 E/ν/ρ 逐项核对（下一项）、网格尺寸依据、以及比值为何偏正/偏负的物理解释（剪切/圣维南方向）。
+- [ ] 材料 E/ν/ρ 已核对（库 Steel 或自定义）——这条必须与 0.9~1.4 并列核对，是**独立**判据，不能省
+- [ ] 网格 CTETRA(10)、尺寸依据（壁厚比例）、节点/单元数已打印；粗网格下**只信位移**，根部应力要 2 mm 级网格（§3a-2：20 mm 网格应力偏 −14.78%）
+- [ ] BC 意图命名（FixedEnd/TipLoad 等），载荷大小/方向/单位（N）明确
+- [ ] 求解成功按 `.f06` 的 FATAL 计数（=0）与后处理能取到结果判定；`.log` 的 `EXIT(0)` 不作判据（对 FATAL 件同样 EXIT(0)），f06 无奇异警告
+- [ ] 输出请求已挂（否则 op2 里没有结果块——非空但 `OUG/OES/OQG` 为 0，不能按"文件空不空"判）；读回 Max 位移/vM 与手算对照
+- [ ] 报告注明应力峰值是否位于约束边角（圣维南区）
+- [ ] 网格收敛：尺寸减半重跑，最大位移变化 <5% 为收敛（§8.3）；VM 峰值位于约束端角点时不收敛，只与同一网格下的读数比较，不作跨网格判据
+- [ ] .fem/.sim/.op2 全部落盘工程目录

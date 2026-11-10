@@ -1,0 +1,5 @@
+# Exact versions observed in the NX12 v12 acceptance environment.
+# Dependency import verification is separate from native NX acceptance.
+mcp==2.3.0
+pydantic==2.14.2
+pywin32==312; platform_system == "Windows"

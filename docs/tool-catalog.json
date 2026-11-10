@@ -1,0 +1,4585 @@
+{
+  "source": "Actual MCP tools/list descriptor snapshot",
+  "adapter_revision": "v12",
+  "registered_tool_count": 77,
+  "tools": [
+    {
+      "name": "nx_status",
+      "description": "Report bridge, NX version, and active-part status.",
+      "input_schema": {
+        "properties": {},
+        "type": "object",
+        "title": "nx_statusArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "connected": {
+            "title": "Connected",
+            "type": "boolean"
+          },
+          "nx_version": {
+            "title": "Nx Version",
+            "type": "string"
+          },
+          "bridge_protocol": {
+            "title": "Bridge Protocol",
+            "type": "integer"
+          },
+          "active_part": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ObjectRef"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "connected",
+          "nx_version",
+          "bridge_protocol"
+        ],
+        "type": "object",
+        "$defs": {
+          "ObjectRef": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "part",
+                  "sketch",
+                  "curve",
+                  "feature",
+                  "body"
+                ],
+                "title": "Kind",
+                "type": "string"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "part_id": {
+                "title": "Part Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "name",
+              "part_id"
+            ],
+            "title": "ObjectRef",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "title": "StatusResult"
+      }
+    },
+    {
+      "name": "nx_create_part",
+      "description": "Create a part inside the configured workspace.",
+      "input_schema": {
+        "properties": {
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "units": {
+            "default": "mm",
+            "enum": [
+              "mm",
+              "inch"
+            ],
+            "title": "Units",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "type": "object",
+        "title": "nx_create_partArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "part": {
+            "$ref": "#/$defs/ObjectRef"
+          },
+          "message": {
+            "default": "",
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "part"
+        ],
+        "type": "object",
+        "$defs": {
+          "ObjectRef": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "part",
+                  "sketch",
+                  "curve",
+                  "feature",
+                  "body"
+                ],
+                "title": "Kind",
+                "type": "string"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "part_id": {
+                "title": "Part Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "name",
+              "part_id"
+            ],
+            "title": "ObjectRef",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "title": "PartResult"
+      }
+    },
+    {
+      "name": "nx_open_part",
+      "description": "Open a part from the configured workspace.",
+      "input_schema": {
+        "properties": {
+          "path": {
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "type": "object",
+        "title": "nx_open_partArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "part": {
+            "$ref": "#/$defs/ObjectRef"
+          },
+          "message": {
+            "default": "",
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "part"
+        ],
+        "type": "object",
+        "$defs": {
+          "ObjectRef": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "part",
+                  "sketch",
+                  "curve",
+                  "feature",
+                  "body"
+                ],
+                "title": "Kind",
+                "type": "string"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "part_id": {
+                "title": "Part Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "name",
+              "part_id"
+            ],
+            "title": "ObjectRef",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "title": "PartResult"
+      }
+    },
+    {
+      "name": "nx_save_part",
+      "description": "Save the active work part.",
+      "input_schema": {
+        "properties": {},
+        "type": "object",
+        "title": "nx_save_partArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object",
+        "additionalProperties": false,
+        "title": "OperationResult"
+      }
+    },
+    {
+      "name": "nx_close_part",
+      "description": "Close the active work part, optionally saving it first.",
+      "input_schema": {
+        "properties": {
+          "save": {
+            "default": true,
+            "title": "Save",
+            "type": "boolean"
+          }
+        },
+        "type": "object",
+        "title": "nx_close_partArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object",
+        "additionalProperties": false,
+        "title": "OperationResult"
+      }
+    },
+    {
+      "name": "nx_export_step",
+      "description": "Export the active work part as STEP inside the configured workspace.",
+      "input_schema": {
+        "properties": {
+          "path": {
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "type": "object",
+        "title": "nx_export_stepArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "message": {
+            "default": "",
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "type": "object",
+        "additionalProperties": false,
+        "title": "ExportResult"
+      }
+    },
+    {
+      "name": "nx_list_sketches",
+      "description": "List sketches in the active work part.",
+      "input_schema": {
+        "properties": {},
+        "type": "object",
+        "title": "nx_list_sketchesArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "objects": {
+            "items": {
+              "$ref": "#/$defs/ObjectRef"
+            },
+            "title": "Objects",
+            "type": "array"
+          },
+          "message": {
+            "default": "",
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "objects"
+        ],
+        "type": "object",
+        "$defs": {
+          "ObjectRef": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "part",
+                  "sketch",
+                  "curve",
+                  "feature",
+                  "body"
+                ],
+                "title": "Kind",
+                "type": "string"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "part_id": {
+                "title": "Part Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "name",
+              "part_id"
+            ],
+            "title": "ObjectRef",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "title": "ObjectListResult"
+      }
+    },
+    {
+      "name": "nx_list_bodies",
+      "description": "List bodies in the active work part.",
+      "input_schema": {
+        "properties": {},
+        "type": "object",
+        "title": "nx_list_bodiesArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "objects": {
+            "items": {
+              "$ref": "#/$defs/ObjectRef"
+            },
+            "title": "Objects",
+            "type": "array"
+          },
+          "message": {
+            "default": "",
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "objects"
+        ],
+        "type": "object",
+        "$defs": {
+          "ObjectRef": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "part",
+                  "sketch",
+                  "curve",
+                  "feature",
+                  "body"
+                ],
+                "title": "Kind",
+                "type": "string"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "part_id": {
+                "title": "Part Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "name",
+              "part_id"
+            ],
+            "title": "ObjectRef",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "title": "ObjectListResult"
+      }
+    },
+    {
+      "name": "nx_list_features",
+      "description": "List features in the active work part.",
+      "input_schema": {
+        "properties": {},
+        "type": "object",
+        "title": "nx_list_featuresArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "objects": {
+            "items": {
+              "$ref": "#/$defs/ObjectRef"
+            },
+            "title": "Objects",
+            "type": "array"
+          },
+          "message": {
+            "default": "",
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "objects"
+        ],
+        "type": "object",
+        "$defs": {
+          "ObjectRef": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "part",
+                  "sketch",
+                  "curve",
+                  "feature",
+                  "body"
+                ],
+                "title": "Kind",
+                "type": "string"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "part_id": {
+                "title": "Part Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "name",
+              "part_id"
+            ],
+            "title": "ObjectRef",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "title": "ObjectListResult"
+      }
+    },
+    {
+      "name": "nx_list_edges",
+      "description": "Inspect every edge of a body: index, curve type, endpoints, midpoint,\n        length, bounding box, direction and adjacent face count. Read-only.",
+      "input_schema": {
+        "properties": {
+          "body_id": {
+            "title": "Body Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "body_id"
+        ],
+        "type": "object",
+        "title": "nx_list_edgesArguments"
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "nx_list_edgesDictOutput"
+      }
+    },
+    {
+      "name": "nx_list_faces",
+      "description": "Inspect every face of a body: index, tag, face type, centroid, area,\n        normal (planar only) and adjacent edge count. Read-only.",
+      "input_schema": {
+        "properties": {
+          "body_id": {
+            "title": "Body Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "body_id"
+        ],
+        "type": "object",
+        "title": "nx_list_facesArguments"
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "nx_list_facesDictOutput"
+      }
+    },
+    {
+      "name": "nx_create_sketch",
+      "description": "Create and activate a sketch on a principal datum plane.",
+      "input_schema": {
+        "properties": {
+          "plane": {
+            "default": "XY",
+            "enum": [
+              "XY",
+              "XZ",
+              "YZ"
+            ],
+            "title": "Plane",
+            "type": "string"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "title": "nx_create_sketchArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "object": {
+            "$ref": "#/$defs/ObjectRef"
+          },
+          "message": {
+            "default": "",
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "object"
+        ],
+        "type": "object",
+        "$defs": {
+          "ObjectRef": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "part",
+                  "sketch",
+                  "curve",
+                  "feature",
+                  "body"
+                ],
+                "title": "Kind",
+                "type": "string"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "part_id": {
+                "title": "Part Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "name",
+              "part_id"
+            ],
+            "title": "ObjectRef",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "title": "ObjectResult"
+      }
+    },
+    {
+      "name": "nx_sketch_line",
+      "description": "Add a line to an explicit sketch reference.",
+      "input_schema": {
+        "properties": {
+          "sketch_id": {
+            "title": "Sketch Id",
+            "type": "string"
+          },
+          "start": {
+            "$ref": "#/$defs/Point2D"
+          },
+          "end": {
+            "$ref": "#/$defs/Point2D"
+          }
+        },
+        "required": [
+          "sketch_id",
+          "start",
+          "end"
+        ],
+        "type": "object",
+        "$defs": {
+          "Point2D": {
+            "additionalProperties": false,
+            "properties": {
+              "x": {
+                "title": "X",
+                "type": "number"
+              },
+              "y": {
+                "title": "Y",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "title": "Point2D",
+            "type": "object"
+          }
+        },
+        "title": "nx_sketch_lineArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "object": {
+            "$ref": "#/$defs/ObjectRef"
+          },
+          "message": {
+            "default": "",
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "object"
+        ],
+        "type": "object",
+        "$defs": {
+          "ObjectRef": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "part",
+                  "sketch",
+                  "curve",
+                  "feature",
+                  "body"
+                ],
+                "title": "Kind",
+                "type": "string"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "part_id": {
+                "title": "Part Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "name",
+              "part_id"
+            ],
+            "title": "ObjectRef",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "title": "ObjectResult"
+      }
+    },
+    {
+      "name": "nx_sketch_rectangle",
+      "description": "Add a rectangle to an explicit sketch reference.",
+      "input_schema": {
+        "properties": {
+          "sketch_id": {
+            "title": "Sketch Id",
+            "type": "string"
+          },
+          "corner1": {
+            "$ref": "#/$defs/Point2D"
+          },
+          "corner2": {
+            "$ref": "#/$defs/Point2D"
+          }
+        },
+        "required": [
+          "sketch_id",
+          "corner1",
+          "corner2"
+        ],
+        "type": "object",
+        "$defs": {
+          "Point2D": {
+            "additionalProperties": false,
+            "properties": {
+              "x": {
+                "title": "X",
+                "type": "number"
+              },
+              "y": {
+                "title": "Y",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "title": "Point2D",
+            "type": "object"
+          }
+        },
+        "title": "nx_sketch_rectangleArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "objects": {
+            "items": {
+              "$ref": "#/$defs/ObjectRef"
+            },
+            "title": "Objects",
+            "type": "array"
+          },
+          "message": {
+            "default": "",
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "objects"
+        ],
+        "type": "object",
+        "$defs": {
+          "ObjectRef": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "part",
+                  "sketch",
+                  "curve",
+                  "feature",
+                  "body"
+                ],
+                "title": "Kind",
+                "type": "string"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "part_id": {
+                "title": "Part Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "name",
+              "part_id"
+            ],
+            "title": "ObjectRef",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "title": "ObjectListResult"
+      }
+    },
+    {
+      "name": "nx_sketch_circle",
+      "description": "Add a circle (center + diameter) to an explicit sketch reference.",
+      "input_schema": {
+        "properties": {
+          "sketch_id": {
+            "title": "Sketch Id",
+            "type": "string"
+          },
+          "center": {
+            "$ref": "#/$defs/Point2D"
+          },
+          "diameter": {
+            "exclusiveMinimum": 0,
+            "title": "Diameter",
+            "type": "number"
+          }
+        },
+        "required": [
+          "sketch_id",
+          "center",
+          "diameter"
+        ],
+        "type": "object",
+        "$defs": {
+          "Point2D": {
+            "additionalProperties": false,
+            "properties": {
+              "x": {
+                "title": "X",
+                "type": "number"
+              },
+              "y": {
+                "title": "Y",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "title": "Point2D",
+            "type": "object"
+          }
+        },
+        "title": "nx_sketch_circleArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "object": {
+            "$ref": "#/$defs/ObjectRef"
+          },
+          "message": {
+            "default": "",
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "object"
+        ],
+        "type": "object",
+        "$defs": {
+          "ObjectRef": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "part",
+                  "sketch",
+                  "curve",
+                  "feature",
+                  "body"
+                ],
+                "title": "Kind",
+                "type": "string"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "part_id": {
+                "title": "Part Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "name",
+              "part_id"
+            ],
+            "title": "ObjectRef",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "title": "ObjectResult"
+      }
+    },
+    {
+      "name": "nx_sketch_arc",
+      "description": "Add an arc (center, radius, start/end degrees) to an explicit sketch reference.",
+      "input_schema": {
+        "properties": {
+          "sketch_id": {
+            "title": "Sketch Id",
+            "type": "string"
+          },
+          "center": {
+            "$ref": "#/$defs/Point2D"
+          },
+          "radius": {
+            "exclusiveMinimum": 0,
+            "title": "Radius",
+            "type": "number"
+          },
+          "start_angle": {
+            "default": 0.0,
+            "minimum": 0,
+            "title": "Start Angle",
+            "type": "number"
+          },
+          "end_angle": {
+            "default": 90.0,
+            "minimum": 0,
+            "title": "End Angle",
+            "type": "number"
+          }
+        },
+        "required": [
+          "sketch_id",
+          "center",
+          "radius"
+        ],
+        "type": "object",
+        "$defs": {
+          "Point2D": {
+            "additionalProperties": false,
+            "properties": {
+              "x": {
+                "title": "X",
+                "type": "number"
+              },
+              "y": {
+                "title": "Y",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "title": "Point2D",
+            "type": "object"
+          }
+        },
+        "title": "nx_sketch_arcArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "object": {
+            "$ref": "#/$defs/ObjectRef"
+          },
+          "message": {
+            "default": "",
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "object"
+        ],
+        "type": "object",
+        "$defs": {
+          "ObjectRef": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "part",
+                  "sketch",
+                  "curve",
+                  "feature",
+                  "body"
+                ],
+                "title": "Kind",
+                "type": "string"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "part_id": {
+                "title": "Part Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "name",
+              "part_id"
+            ],
+            "title": "ObjectRef",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "title": "ObjectResult"
+      }
+    },
+    {
+      "name": "nx_finish_sketch",
+      "description": "Deactivate and finish an explicit sketch reference.",
+      "input_schema": {
+        "properties": {
+          "sketch_id": {
+            "title": "Sketch Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sketch_id"
+        ],
+        "type": "object",
+        "title": "nx_finish_sketchArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "object": {
+            "$ref": "#/$defs/ObjectRef"
+          },
+          "message": {
+            "default": "",
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "object"
+        ],
+        "type": "object",
+        "$defs": {
+          "ObjectRef": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "part",
+                  "sketch",
+                  "curve",
+                  "feature",
+                  "body"
+                ],
+                "title": "Kind",
+                "type": "string"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "part_id": {
+                "title": "Part Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "name",
+              "part_id"
+            ],
+            "title": "ObjectRef",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "title": "ObjectResult"
+      }
+    },
+    {
+      "name": "nx_extrude",
+      "description": "Extrude a sketch into a new body, or subtract it from an existing target body.",
+      "input_schema": {
+        "properties": {
+          "sketch_id": {
+            "title": "Sketch Id",
+            "type": "string"
+          },
+          "distance": {
+            "exclusiveMinimum": 0,
+            "title": "Distance",
+            "type": "number"
+          },
+          "reverse": {
+            "default": false,
+            "title": "Reverse",
+            "type": "boolean"
+          },
+          "start_offset": {
+            "default": 0.0,
+            "minimum": 0,
+            "title": "Start Offset",
+            "type": "number"
+          },
+          "operation": {
+            "default": "create",
+            "enum": [
+              "create",
+              "subtract"
+            ],
+            "title": "Operation",
+            "type": "string"
+          },
+          "target_body_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Target Body Id"
+          }
+        },
+        "required": [
+          "sketch_id",
+          "distance"
+        ],
+        "type": "object",
+        "title": "nx_extrudeArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "feature": {
+            "$ref": "#/$defs/ObjectRef"
+          },
+          "body": {
+            "$ref": "#/$defs/ObjectRef"
+          },
+          "message": {
+            "default": "",
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "feature",
+          "body"
+        ],
+        "type": "object",
+        "$defs": {
+          "ObjectRef": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "part",
+                  "sketch",
+                  "curve",
+                  "feature",
+                  "body"
+                ],
+                "title": "Kind",
+                "type": "string"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "part_id": {
+                "title": "Part Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "name",
+              "part_id"
+            ],
+            "title": "ObjectRef",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "title": "ExtrudeResult"
+      }
+    },
+    {
+      "name": "nx_hole",
+      "description": "Create a hole on a target body (circle sketch + boolean subtract).",
+      "input_schema": {
+        "properties": {
+          "body_id": {
+            "title": "Body Id",
+            "type": "string"
+          },
+          "center": {
+            "$ref": "#/$defs/Point2D"
+          },
+          "diameter": {
+            "exclusiveMinimum": 0,
+            "title": "Diameter",
+            "type": "number"
+          },
+          "depth": {
+            "exclusiveMinimum": 0,
+            "title": "Depth",
+            "type": "number"
+          },
+          "start_offset": {
+            "default": 0.0,
+            "minimum": 0,
+            "title": "Start Offset",
+            "type": "number"
+          }
+        },
+        "required": [
+          "body_id",
+          "center",
+          "diameter",
+          "depth"
+        ],
+        "type": "object",
+        "$defs": {
+          "Point2D": {
+            "additionalProperties": false,
+            "properties": {
+              "x": {
+                "title": "X",
+                "type": "number"
+              },
+              "y": {
+                "title": "Y",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "title": "Point2D",
+            "type": "object"
+          }
+        },
+        "title": "nx_holeArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "object": {
+            "$ref": "#/$defs/ObjectRef"
+          },
+          "message": {
+            "default": "",
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "object"
+        ],
+        "type": "object",
+        "$defs": {
+          "ObjectRef": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "part",
+                  "sketch",
+                  "curve",
+                  "feature",
+                  "body"
+                ],
+                "title": "Kind",
+                "type": "string"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "part_id": {
+                "title": "Part Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "name",
+              "part_id"
+            ],
+            "title": "ObjectRef",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "title": "ObjectResult"
+      }
+    },
+    {
+      "name": "nx_counterbore_hole",
+      "description": "Create a coaxial counterbore hole: a smaller deep through hole plus a\n        larger shallow counterbore from the top face. Independent from nx_hole.",
+      "input_schema": {
+        "properties": {
+          "body_id": {
+            "title": "Body Id",
+            "type": "string"
+          },
+          "center": {
+            "$ref": "#/$defs/Point2D"
+          },
+          "hole_diameter": {
+            "exclusiveMinimum": 0,
+            "title": "Hole Diameter",
+            "type": "number"
+          },
+          "hole_depth": {
+            "exclusiveMinimum": 0,
+            "title": "Hole Depth",
+            "type": "number"
+          },
+          "counterbore_diameter": {
+            "exclusiveMinimum": 0,
+            "title": "Counterbore Diameter",
+            "type": "number"
+          },
+          "counterbore_depth": {
+            "exclusiveMinimum": 0,
+            "title": "Counterbore Depth",
+            "type": "number"
+          },
+          "start_offset": {
+            "default": 0.0,
+            "minimum": 0,
+            "title": "Start Offset",
+            "type": "number"
+          }
+        },
+        "required": [
+          "body_id",
+          "center",
+          "hole_diameter",
+          "hole_depth",
+          "counterbore_diameter",
+          "counterbore_depth"
+        ],
+        "type": "object",
+        "$defs": {
+          "Point2D": {
+            "additionalProperties": false,
+            "properties": {
+              "x": {
+                "title": "X",
+                "type": "number"
+              },
+              "y": {
+                "title": "Y",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "title": "Point2D",
+            "type": "object"
+          }
+        },
+        "title": "nx_counterbore_holeArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "object": {
+            "$ref": "#/$defs/ObjectRef"
+          },
+          "message": {
+            "default": "",
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "object"
+        ],
+        "type": "object",
+        "$defs": {
+          "ObjectRef": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "part",
+                  "sketch",
+                  "curve",
+                  "feature",
+                  "body"
+                ],
+                "title": "Kind",
+                "type": "string"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "part_id": {
+                "title": "Part Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "name",
+              "part_id"
+            ],
+            "title": "ObjectRef",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "title": "ObjectResult"
+      }
+    },
+    {
+      "name": "nx_countersink_hole",
+      "description": "Create a coaxial countersink (conical) hole: a smaller deep through\n        cylinder plus a conical countersink from the top face. Independent of\n        nx_hole / nx_counterbore_hole.",
+      "input_schema": {
+        "properties": {
+          "body_id": {
+            "title": "Body Id",
+            "type": "string"
+          },
+          "center": {
+            "$ref": "#/$defs/Point2D"
+          },
+          "hole_diameter": {
+            "exclusiveMinimum": 0,
+            "title": "Hole Diameter",
+            "type": "number"
+          },
+          "hole_depth": {
+            "exclusiveMinimum": 0,
+            "title": "Hole Depth",
+            "type": "number"
+          },
+          "countersink_diameter": {
+            "exclusiveMinimum": 0,
+            "title": "Countersink Diameter",
+            "type": "number"
+          },
+          "countersink_angle": {
+            "default": 90.0,
+            "exclusiveMaximum": 180,
+            "exclusiveMinimum": 0,
+            "title": "Countersink Angle",
+            "type": "number"
+          },
+          "start_offset": {
+            "default": 0.0,
+            "minimum": 0,
+            "title": "Start Offset",
+            "type": "number"
+          }
+        },
+        "required": [
+          "body_id",
+          "center",
+          "hole_diameter",
+          "hole_depth",
+          "countersink_diameter"
+        ],
+        "type": "object",
+        "$defs": {
+          "Point2D": {
+            "additionalProperties": false,
+            "properties": {
+              "x": {
+                "title": "X",
+                "type": "number"
+              },
+              "y": {
+                "title": "Y",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "title": "Point2D",
+            "type": "object"
+          }
+        },
+        "title": "nx_countersink_holeArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "object": {
+            "$ref": "#/$defs/ObjectRef"
+          },
+          "message": {
+            "default": "",
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "object"
+        ],
+        "type": "object",
+        "$defs": {
+          "ObjectRef": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "part",
+                  "sketch",
+                  "curve",
+                  "feature",
+                  "body"
+                ],
+                "title": "Kind",
+                "type": "string"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "part_id": {
+                "title": "Part Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "name",
+              "part_id"
+            ],
+            "title": "ObjectRef",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "title": "ObjectResult"
+      }
+    },
+    {
+      "name": "nx_shell",
+      "description": "Shell (hollow) a body: remove one face as an opening and keep a\n        constant wall thickness. First version removes a single face; inward=True\n        keeps the outer dimensions.",
+      "input_schema": {
+        "properties": {
+          "body_id": {
+            "title": "Body Id",
+            "type": "string"
+          },
+          "thickness": {
+            "exclusiveMinimum": 0,
+            "title": "Thickness",
+            "type": "number"
+          },
+          "remove_face_index": {
+            "title": "Remove Face Index",
+            "type": "integer"
+          },
+          "inward": {
+            "default": true,
+            "title": "Inward",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "body_id",
+          "thickness",
+          "remove_face_index"
+        ],
+        "type": "object",
+        "title": "nx_shellArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "object": {
+            "$ref": "#/$defs/ObjectRef"
+          },
+          "message": {
+            "default": "",
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "object"
+        ],
+        "type": "object",
+        "$defs": {
+          "ObjectRef": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "part",
+                  "sketch",
+                  "curve",
+                  "feature",
+                  "body"
+                ],
+                "title": "Kind",
+                "type": "string"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "part_id": {
+                "title": "Part Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "name",
+              "part_id"
+            ],
+            "title": "ObjectRef",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "title": "ObjectResult"
+      }
+    },
+    {
+      "name": "nx_edge_blend",
+      "description": "Create an edge blend (fillet) on edges of a body; default all edges.",
+      "input_schema": {
+        "properties": {
+          "body_id": {
+            "title": "Body Id",
+            "type": "string"
+          },
+          "radius": {
+            "exclusiveMinimum": 0,
+            "title": "Radius",
+            "type": "number"
+          },
+          "edge_indices": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Edge Indices"
+          }
+        },
+        "required": [
+          "body_id",
+          "radius"
+        ],
+        "type": "object",
+        "title": "nx_edge_blendArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "object": {
+            "$ref": "#/$defs/ObjectRef"
+          },
+          "message": {
+            "default": "",
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "object"
+        ],
+        "type": "object",
+        "$defs": {
+          "ObjectRef": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "part",
+                  "sketch",
+                  "curve",
+                  "feature",
+                  "body"
+                ],
+                "title": "Kind",
+                "type": "string"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "part_id": {
+                "title": "Part Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "name",
+              "part_id"
+            ],
+            "title": "ObjectRef",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "title": "ObjectResult"
+      }
+    },
+    {
+      "name": "nx_chamfer",
+      "description": "Create a symmetric chamfer on edges of a body; default all edges.",
+      "input_schema": {
+        "properties": {
+          "body_id": {
+            "title": "Body Id",
+            "type": "string"
+          },
+          "offset": {
+            "exclusiveMinimum": 0,
+            "title": "Offset",
+            "type": "number"
+          },
+          "edge_indices": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Edge Indices"
+          }
+        },
+        "required": [
+          "body_id",
+          "offset"
+        ],
+        "type": "object",
+        "title": "nx_chamferArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "object": {
+            "$ref": "#/$defs/ObjectRef"
+          },
+          "message": {
+            "default": "",
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "object"
+        ],
+        "type": "object",
+        "$defs": {
+          "ObjectRef": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "part",
+                  "sketch",
+                  "curve",
+                  "feature",
+                  "body"
+                ],
+                "title": "Kind",
+                "type": "string"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "part_id": {
+                "title": "Part Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "name",
+              "part_id"
+            ],
+            "title": "ObjectRef",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "title": "ObjectResult"
+      }
+    },
+    {
+      "name": "nx_unite",
+      "description": "Boolean-unite one or more tool bodies into the target body.\n\n        The target body keeps its id; the tool bodies are consumed and\n        disappear from ``nx_list_bodies`` after the boolean.\n        ",
+      "input_schema": {
+        "properties": {
+          "target_body_id": {
+            "title": "Target Body Id",
+            "type": "string"
+          },
+          "tool_body_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tool Body Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "target_body_id",
+          "tool_body_ids"
+        ],
+        "type": "object",
+        "title": "nx_uniteArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "object": {
+            "$ref": "#/$defs/ObjectRef"
+          },
+          "message": {
+            "default": "",
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "object"
+        ],
+        "type": "object",
+        "$defs": {
+          "ObjectRef": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "part",
+                  "sketch",
+                  "curve",
+                  "feature",
+                  "body"
+                ],
+                "title": "Kind",
+                "type": "string"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "part_id": {
+                "title": "Part Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "name",
+              "part_id"
+            ],
+            "title": "ObjectRef",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "title": "ObjectResult"
+      }
+    },
+    {
+      "name": "nx_revolve",
+      "description": "Revolve a closed sketch section around an in-sketch 2D axis.\n\n        Creates a new solid only (no unite/subtract). ``axis_start`` and\n        ``axis_end`` are sketch XY coordinates defining the revolution axis;\n        ``angle`` is the sweep angle in degrees (0 < angle <= 360).\n        ",
+      "input_schema": {
+        "properties": {
+          "sketch_id": {
+            "title": "Sketch Id",
+            "type": "string"
+          },
+          "axis_start": {
+            "$ref": "#/$defs/Point2D"
+          },
+          "axis_end": {
+            "$ref": "#/$defs/Point2D"
+          },
+          "angle": {
+            "default": 360.0,
+            "exclusiveMinimum": 0,
+            "maximum": 360,
+            "title": "Angle",
+            "type": "number"
+          },
+          "reverse": {
+            "default": false,
+            "title": "Reverse",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "sketch_id",
+          "axis_start",
+          "axis_end"
+        ],
+        "type": "object",
+        "$defs": {
+          "Point2D": {
+            "additionalProperties": false,
+            "properties": {
+              "x": {
+                "title": "X",
+                "type": "number"
+              },
+              "y": {
+                "title": "Y",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "title": "Point2D",
+            "type": "object"
+          }
+        },
+        "title": "nx_revolveArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "object": {
+            "$ref": "#/$defs/ObjectRef"
+          },
+          "message": {
+            "default": "",
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "object"
+        ],
+        "type": "object",
+        "$defs": {
+          "ObjectRef": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "part",
+                  "sketch",
+                  "curve",
+                  "feature",
+                  "body"
+                ],
+                "title": "Kind",
+                "type": "string"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "part_id": {
+                "title": "Part Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "name",
+              "part_id"
+            ],
+            "title": "ObjectRef",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "title": "ObjectResult"
+      }
+    },
+    {
+      "name": "nx_mirror",
+      "description": "Mirror a body about a datum plane.\n\n        ``plane`` selects the mirror datum plane (XY/XZ/YZ); ``offset`` shifts\n        that plane along its normal by the given mm value (default 0). The\n        mirrored body is created as an independent body and is NOT united with\n        the source; use ``nx_unite`` if merging is required.\n        ",
+      "input_schema": {
+        "properties": {
+          "body_id": {
+            "title": "Body Id",
+            "type": "string"
+          },
+          "plane": {
+            "enum": [
+              "XY",
+              "XZ",
+              "YZ"
+            ],
+            "title": "Plane",
+            "type": "string"
+          },
+          "offset": {
+            "default": 0.0,
+            "title": "Offset",
+            "type": "number"
+          }
+        },
+        "required": [
+          "body_id",
+          "plane"
+        ],
+        "type": "object",
+        "title": "nx_mirrorArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "object": {
+            "$ref": "#/$defs/ObjectRef"
+          },
+          "message": {
+            "default": "",
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "object"
+        ],
+        "type": "object",
+        "$defs": {
+          "ObjectRef": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "part",
+                  "sketch",
+                  "curve",
+                  "feature",
+                  "body"
+                ],
+                "title": "Kind",
+                "type": "string"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "part_id": {
+                "title": "Part Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "name",
+              "part_id"
+            ],
+            "title": "ObjectRef",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "title": "ObjectResult"
+      }
+    },
+    {
+      "name": "nx_linear_pattern",
+      "description": "Pattern a body linearly along X/Y/Z.\n\n        ``count`` is the total number of instances including the original\n        (count=4 yields 4 bodies); ``spacing`` is the per-instance delta in mm.\n        The original body is kept and new instances are independent bodies\n        (NOT united); use ``nx_unite`` if merging is required.\n        ",
+      "input_schema": {
+        "properties": {
+          "body_id": {
+            "title": "Body Id",
+            "type": "string"
+          },
+          "direction": {
+            "enum": [
+              "X",
+              "Y",
+              "Z"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "count": {
+            "maximum": 1000,
+            "minimum": 2,
+            "title": "Count",
+            "type": "integer"
+          },
+          "spacing": {
+            "exclusiveMinimum": 0,
+            "title": "Spacing",
+            "type": "number"
+          },
+          "reverse": {
+            "default": false,
+            "title": "Reverse",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "body_id",
+          "direction",
+          "count",
+          "spacing"
+        ],
+        "type": "object",
+        "title": "nx_linear_patternArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "objects": {
+            "items": {
+              "$ref": "#/$defs/ObjectRef"
+            },
+            "title": "Objects",
+            "type": "array"
+          },
+          "message": {
+            "default": "",
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "objects"
+        ],
+        "type": "object",
+        "$defs": {
+          "ObjectRef": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "part",
+                  "sketch",
+                  "curve",
+                  "feature",
+                  "body"
+                ],
+                "title": "Kind",
+                "type": "string"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "part_id": {
+                "title": "Part Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "name",
+              "part_id"
+            ],
+            "title": "ObjectRef",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "title": "ObjectListResult"
+      }
+    },
+    {
+      "name": "nx_circular_pattern",
+      "description": "Pattern a body circularly about an axis through ``center``.\n\n        ``count`` is the total number of instances including the original\n        (count=4 yields 4 bodies); ``angle`` is the total sweep in degrees\n        (360.0 distributes evenly around a full circle). The original body is\n        kept and new instances are independent bodies (NOT united); use\n        ``nx_unite`` if merging is required.\n        ",
+      "input_schema": {
+        "properties": {
+          "body_id": {
+            "title": "Body Id",
+            "type": "string"
+          },
+          "axis": {
+            "enum": [
+              "X",
+              "Y",
+              "Z"
+            ],
+            "title": "Axis",
+            "type": "string"
+          },
+          "center": {
+            "$ref": "#/$defs/Point3D"
+          },
+          "count": {
+            "maximum": 1000,
+            "minimum": 2,
+            "title": "Count",
+            "type": "integer"
+          },
+          "angle": {
+            "exclusiveMinimum": 0,
+            "maximum": 360,
+            "title": "Angle",
+            "type": "number"
+          },
+          "reverse": {
+            "default": false,
+            "title": "Reverse",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "body_id",
+          "axis",
+          "center",
+          "count",
+          "angle"
+        ],
+        "type": "object",
+        "$defs": {
+          "Point3D": {
+            "description": "A 3D point in model space (mm).",
+            "properties": {
+              "x": {
+                "title": "X",
+                "type": "number"
+              },
+              "y": {
+                "title": "Y",
+                "type": "number"
+              },
+              "z": {
+                "title": "Z",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "title": "Point3D",
+            "type": "object"
+          }
+        },
+        "title": "nx_circular_patternArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "objects": {
+            "items": {
+              "$ref": "#/$defs/ObjectRef"
+            },
+            "title": "Objects",
+            "type": "array"
+          },
+          "message": {
+            "default": "",
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "objects"
+        ],
+        "type": "object",
+        "$defs": {
+          "ObjectRef": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "title": "Id",
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "part",
+                  "sketch",
+                  "curve",
+                  "feature",
+                  "body"
+                ],
+                "title": "Kind",
+                "type": "string"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "part_id": {
+                "title": "Part Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "name",
+              "part_id"
+            ],
+            "title": "ObjectRef",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "title": "ObjectListResult"
+      }
+    },
+    {
+      "name": "nx_undo",
+      "description": "Undo the last visible NX MCP operation.",
+      "input_schema": {
+        "properties": {},
+        "type": "object",
+        "title": "nx_undoArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object",
+        "additionalProperties": false,
+        "title": "OperationResult"
+      }
+    },
+    {
+      "name": "nx_fit_view",
+      "description": "Fit the active modeling view.",
+      "input_schema": {
+        "properties": {},
+        "type": "object",
+        "title": "nx_fit_viewArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object",
+        "additionalProperties": false,
+        "title": "OperationResult"
+      }
+    },
+    {
+      "name": "nx_release",
+      "description": "Clear the current task state and return NX to normal interaction.\n\n        With the resident C# Loader backend, the Loader and named pipe remain\n        alive for the entire NX session; nx_release does not unload the plugin\n        or require Alt+F8 to start it again.\n        ",
+      "input_schema": {
+        "properties": {},
+        "type": "object",
+        "title": "nx_releaseArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object",
+        "additionalProperties": false,
+        "title": "OperationResult"
+      }
+    },
+    {
+      "name": "nx_create_drawing_sheet",
+      "description": "Create a drawing sheet and place a base view of the given model view.\n\n        The part must already contain geometry for the base view to be meaningful.\n        ",
+      "input_schema": {
+        "properties": {
+          "name": {
+            "default": "MCP_SHEET_1",
+            "title": "Name",
+            "type": "string"
+          },
+          "size": {
+            "default": "A4",
+            "enum": [
+              "A0",
+              "A1",
+              "A2",
+              "A3",
+              "A4"
+            ],
+            "title": "Size",
+            "type": "string"
+          },
+          "projection": {
+            "default": "first",
+            "enum": [
+              "first",
+              "third"
+            ],
+            "title": "Projection",
+            "type": "string"
+          },
+          "scale": {
+            "default": 1.0,
+            "title": "Scale",
+            "type": "number"
+          },
+          "model_view": {
+            "default": "Top",
+            "title": "Model View",
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "title": "nx_create_drawing_sheetArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object",
+        "additionalProperties": false,
+        "title": "OperationResult"
+      }
+    },
+    {
+      "name": "nx_create_projected_view",
+      "description": "Project a view from an existing drafting view at sheet position (x, y).\n\n        Leave parent_view_id empty to use the first drafting view on the sheet.\n        ",
+      "input_schema": {
+        "properties": {
+          "x": {
+            "title": "X",
+            "type": "number"
+          },
+          "y": {
+            "title": "Y",
+            "type": "number"
+          },
+          "parent_view_id": {
+            "default": "",
+            "title": "Parent View Id",
+            "type": "string"
+          },
+          "name": {
+            "default": "",
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "x",
+          "y"
+        ],
+        "type": "object",
+        "title": "nx_create_projected_viewArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object",
+        "additionalProperties": false,
+        "title": "OperationResult"
+      }
+    },
+    {
+      "name": "nx_list_drawing_sheets",
+      "description": "List the drawing sheets in the active part.",
+      "input_schema": {
+        "properties": {},
+        "type": "object",
+        "title": "nx_list_drawing_sheetsArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object",
+        "additionalProperties": false,
+        "title": "OperationResult"
+      }
+    },
+    {
+      "name": "nx_list_drafting_views",
+      "description": "List the drafting views on the current drawing sheet.",
+      "input_schema": {
+        "properties": {},
+        "type": "object",
+        "title": "nx_list_drafting_viewsArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object",
+        "additionalProperties": false,
+        "title": "OperationResult"
+      }
+    },
+    {
+      "name": "nx_list_dimensions",
+      "description": "Read back every dimension in the part: measured size and tolerance.\n\n        Returns one entry per dimension, formatted as\n        \"<journal_id>|<name>|size=<value>|tol=<upper>/<lower>|<tolerance_type>\".\n        Use this to verify dimensions you just created, or to READ an existing\n        NX 2D drawing: sizes and tolerances are recovered from the model, so an\n        agent can understand what a drawing specifies without opening the UI.\n        ",
+      "input_schema": {
+        "properties": {},
+        "type": "object",
+        "title": "nx_list_dimensionsArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object",
+        "additionalProperties": false,
+        "title": "OperationResult"
+      }
+    },
+    {
+      "name": "nx_list_annotations",
+      "description": "Read the non-dimension annotations of a drawing: notes, GD&T, roughness.\n\n        Each entry is prefixed by kind:\n          \"NOTE|<journal_id>|<text>\"            drafting / technical-requirement text\n          \"GDT|<journal_id>|<characteristic>|tol=<value>|datum=<d1>,<d2>,<d3>\"\n          \"ROUGH|<journal_id>\"                  surface finish symbol\n        Use this together with nx_list_dimensions to fully understand an existing\n        NX 2D process drawing.\n        ",
+      "input_schema": {
+        "properties": {},
+        "type": "object",
+        "title": "nx_list_annotationsArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object",
+        "additionalProperties": false,
+        "title": "OperationResult"
+      }
+    },
+    {
+      "name": "nx_create_radius_dimension",
+      "description": "Create a RADIUS dimension on one edge (fillets, arcs, rounds).\n\n        edge_index is the 0-based index from nx_list_edges on the given body.\n        ",
+      "input_schema": {
+        "properties": {
+          "view_id": {
+            "default": "",
+            "title": "View Id",
+            "type": "string"
+          },
+          "body_id": {
+            "default": "",
+            "title": "Body Id",
+            "type": "string"
+          },
+          "edge_index": {
+            "default": 0,
+            "title": "Edge Index",
+            "type": "integer"
+          },
+          "pos_x": {
+            "default": 0.0,
+            "title": "Pos X",
+            "type": "number"
+          },
+          "pos_y": {
+            "default": 0.0,
+            "title": "Pos Y",
+            "type": "number"
+          },
+          "dim_name": {
+            "default": "MCP_RADIUS",
+            "title": "Dim Name",
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "title": "nx_create_radius_dimensionArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object",
+        "additionalProperties": false,
+        "title": "OperationResult"
+      }
+    },
+    {
+      "name": "nx_delete_annotation",
+      "description": "Delete a note / dimension / GDT / roughness annotation.\n\n        Pass either its journal id or name (e.g. \"LEN_120\", \"HANDLE R-5132\"), or a\n        \"kind:index\" selector: note:0, dim:1, gdt:0, rough:0 (0-based, in the order\n        returned by nx_list_dimensions / nx_list_annotations).\n        Useful for cleaning up test annotations that nx_undo cannot reach.\n        ",
+      "input_schema": {
+        "properties": {
+          "annotation_id": {
+            "title": "Annotation Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "annotation_id"
+        ],
+        "type": "object",
+        "title": "nx_delete_annotationArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object",
+        "additionalProperties": false,
+        "title": "OperationResult"
+      }
+    },
+    {
+      "name": "nx_export_pdf",
+      "description": "Export the current drawing display to a PDF file.\n\n        Pass sheet_name to display that sheet first (the export follows the current\n        display). Use nx_list_drawing_sheets to see available sheet names.\n        ",
+      "input_schema": {
+        "properties": {
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "sheet_name": {
+            "default": "",
+            "title": "Sheet Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "type": "object",
+        "title": "nx_export_pdfArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object",
+        "additionalProperties": false,
+        "title": "OperationResult"
+      }
+    },
+    {
+      "name": "nx_create_roughness",
+      "description": "Create a surface finish (roughness) symbol on the current drawing sheet.\n\n        value goes into the symbol's a1 slot - e.g. \"1.6\" for Ra 1.6, \"3.2\" for Ra 3.2.\n        Position is in sheet coordinates (mm).\n        ",
+      "input_schema": {
+        "properties": {
+          "pos_x": {
+            "default": 20.0,
+            "title": "Pos X",
+            "type": "number"
+          },
+          "pos_y": {
+            "default": 20.0,
+            "title": "Pos Y",
+            "type": "number"
+          },
+          "value": {
+            "default": "1.6",
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "title": "nx_create_roughnessArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object",
+        "additionalProperties": false,
+        "title": "OperationResult"
+      }
+    },
+    {
+      "name": "nx_create_title_block",
+      "description": "Place a title block on the current drawing sheet.\n\n        Position is in sheet coordinates (mm); typically bottom-right, e.g.\n        pos_x=340, pos_y=5 for an A3 landscape sheet.\n        ",
+      "input_schema": {
+        "properties": {
+          "pos_x": {
+            "default": 0.0,
+            "title": "Pos X",
+            "type": "number"
+          },
+          "pos_y": {
+            "default": 0.0,
+            "title": "Pos Y",
+            "type": "number"
+          }
+        },
+        "type": "object",
+        "title": "nx_create_title_blockArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object",
+        "additionalProperties": false,
+        "title": "OperationResult"
+      }
+    },
+    {
+      "name": "nx_set_attribute",
+      "description": "Set a string attribute on the part.\n\n        This is how a title block gets its CONTENT: title-block cells usually\n        reference part attributes. Typical names: 名称 / 图号 / 材料 / 设计 /\n        审核 / 比例 / 单位. Value may contain spaces.\n        ",
+      "input_schema": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "value"
+        ],
+        "type": "object",
+        "title": "nx_set_attributeArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object",
+        "additionalProperties": false,
+        "title": "OperationResult"
+      }
+    },
+    {
+      "name": "nx_list_attributes",
+      "description": "Read back all user attributes set on the part (title-block content).",
+      "input_schema": {
+        "properties": {},
+        "type": "object",
+        "title": "nx_list_attributesArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object",
+        "additionalProperties": false,
+        "title": "OperationResult"
+      }
+    },
+    {
+      "name": "nx_measure_distance",
+      "description": "Measure the minimum 3D distance between two edges of a body.\n\n        This is a QUERY: no annotation is created. It returns the numeric distance\n        (mm) plus the two closest points, so an agent can verify geometry instead of\n        guessing. Indices are 0-based from nx_list_edges.\n        ",
+      "input_schema": {
+        "properties": {
+          "body_id": {
+            "default": "",
+            "title": "Body Id",
+            "type": "string"
+          },
+          "edge_index_1": {
+            "default": 0,
+            "title": "Edge Index 1",
+            "type": "integer"
+          },
+          "edge_index_2": {
+            "default": 0,
+            "title": "Edge Index 2",
+            "type": "integer"
+          }
+        },
+        "type": "object",
+        "title": "nx_measure_distanceArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object",
+        "additionalProperties": false,
+        "title": "OperationResult"
+      }
+    },
+    {
+      "name": "nx_create_note",
+      "description": "Add technical-requirement / process text to the current drawing sheet.\n\n        Use \"|\" to start a new line, e.g. \"技术要求|1. 未注倒角 C0.5|2. 调质 28-32HRC\".\n        Position is in sheet coordinates (mm).\n        ",
+      "input_schema": {
+        "properties": {
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "pos_x": {
+            "default": 20.0,
+            "title": "Pos X",
+            "type": "number"
+          },
+          "pos_y": {
+            "default": 20.0,
+            "title": "Pos Y",
+            "type": "number"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object",
+        "title": "nx_create_noteArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object",
+        "additionalProperties": false,
+        "title": "OperationResult"
+      }
+    },
+    {
+      "name": "nx_create_diameter_dimension",
+      "description": "Create a DIAMETER dimension on one edge (essential for shafts).\n\n        A linear dimension between two edges cannot express a diameter; use this\n        for cylindrical/circular features. edge_index is the 0-based index from\n        nx_list_edges on the given body.\n        ",
+      "input_schema": {
+        "properties": {
+          "view_id": {
+            "default": "",
+            "title": "View Id",
+            "type": "string"
+          },
+          "body_id": {
+            "default": "",
+            "title": "Body Id",
+            "type": "string"
+          },
+          "edge_index": {
+            "default": 0,
+            "title": "Edge Index",
+            "type": "integer"
+          },
+          "pos_x": {
+            "default": 0.0,
+            "title": "Pos X",
+            "type": "number"
+          },
+          "pos_y": {
+            "default": 0.0,
+            "title": "Pos Y",
+            "type": "number"
+          },
+          "upper_tolerance": {
+            "default": 0.1,
+            "title": "Upper Tolerance",
+            "type": "number"
+          },
+          "lower_tolerance": {
+            "default": -0.1,
+            "title": "Lower Tolerance",
+            "type": "number"
+          },
+          "dim_name": {
+            "default": "MCP_DIAMETER",
+            "title": "Dim Name",
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "title": "nx_create_diameter_dimensionArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object",
+        "additionalProperties": false,
+        "title": "OperationResult"
+      }
+    },
+    {
+      "name": "nx_update_views",
+      "description": "Force every drafting view on the current sheet to a fresh update.\n\n        Clears the out-of-date (\"clock\") flag shown in the Part Navigator after a\n        drawing or projected view is created or modified.\n        ",
+      "input_schema": {
+        "properties": {},
+        "type": "object",
+        "title": "nx_update_viewsArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object",
+        "additionalProperties": false,
+        "title": "OperationResult"
+      }
+    },
+    {
+      "name": "nx_create_dimension",
+      "description": "Create an associative linear dimension with a bilateral tolerance.\n\n        Measures the distance between two model edges (selected by their 0-based\n        index from nx_list_edges on the given body) inside the drafting view.\n        Default tolerance is ±0.1 mm using the BilateralTwoLines style.\n        ",
+      "input_schema": {
+        "properties": {
+          "view_id": {
+            "default": "",
+            "title": "View Id",
+            "type": "string"
+          },
+          "body_id": {
+            "default": "",
+            "title": "Body Id",
+            "type": "string"
+          },
+          "first_edge_index": {
+            "default": 0,
+            "title": "First Edge Index",
+            "type": "integer"
+          },
+          "second_edge_index": {
+            "default": 0,
+            "title": "Second Edge Index",
+            "type": "integer"
+          },
+          "pos_x": {
+            "default": 0.0,
+            "title": "Pos X",
+            "type": "number"
+          },
+          "pos_y": {
+            "default": 0.0,
+            "title": "Pos Y",
+            "type": "number"
+          },
+          "measurement": {
+            "default": "horizontal",
+            "enum": [
+              "horizontal",
+              "vertical",
+              "parallel"
+            ],
+            "title": "Measurement",
+            "type": "string"
+          },
+          "upper_tolerance": {
+            "default": 0.1,
+            "title": "Upper Tolerance",
+            "type": "number"
+          },
+          "lower_tolerance": {
+            "default": -0.1,
+            "title": "Lower Tolerance",
+            "type": "number"
+          },
+          "dim_name": {
+            "default": "MCP_DIMENSION",
+            "title": "Dim Name",
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "title": "nx_create_dimensionArguments"
+      },
+      "output_schema": {
+        "properties": {
+          "status": {
+            "const": "success",
+            "default": "success",
+            "title": "Status",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object",
+        "additionalProperties": false,
+        "title": "OperationResult"
+      }
+    },
+    {
+      "name": "nx_assembly_create",
+      "description": "Create a new independent NX12 assembly part inside the workspace.",
+      "input_schema": {
+        "properties": {
+          "path": {
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "type": "object",
+        "title": "nx_assembly_createArguments"
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "nx_assembly_createDictOutput"
+      }
+    },
+    {
+      "name": "nx_assembly_add",
+      "description": "Insert an existing .prt, optionally into a subassembly.\n\n        Position is mm. Rotation is the NX12 nine-value component orientation\n        matrix in API column order; identity is the default. Returned opaque\n        component IDs are used by later tools; do not substitute display names.\n        ",
+      "input_schema": {
+        "properties": {
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "parent_id": {
+            "default": "/",
+            "title": "Parent Id",
+            "type": "string"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "maxItems": 3,
+                "minItems": 3,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Position"
+          },
+          "rotation": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "maxItems": 9,
+                "minItems": 9,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Rotation"
+          }
+        },
+        "required": [
+          "path",
+          "name"
+        ],
+        "type": "object",
+        "title": "nx_assembly_addArguments"
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "nx_assembly_addDictOutput"
+      }
+    },
+    {
+      "name": "nx_assembly_list",
+      "description": "Read the actual component hierarchy, transforms, and part references.",
+      "input_schema": {
+        "properties": {},
+        "type": "object",
+        "title": "nx_assembly_listArguments"
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "nx_assembly_listDictOutput"
+      }
+    },
+    {
+      "name": "nx_assembly_transform",
+      "description": "Set or increment component translation/orientation in owning assembly coordinates.\n\n        Position is mm; rotation is a nine-value rigid NX orientation matrix.\n        Transforms use the component definition in its direct parent prototype.\n        Editing a nested definition affects every instance of that subassembly.\n        List readback uses each occurrence's coordinate_part reference frame;\n        do not reuse root occurrence coordinates as nested local inputs.\n        ",
+      "input_schema": {
+        "properties": {
+          "component_id": {
+            "title": "Component Id",
+            "type": "string"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "maxItems": 3,
+                "minItems": 3,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Position"
+          },
+          "rotation": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "maxItems": 9,
+                "minItems": 9,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Rotation"
+          },
+          "relative": {
+            "default": false,
+            "title": "Relative",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "component_id"
+        ],
+        "type": "object",
+        "title": "nx_assembly_transformArguments"
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "nx_assembly_transformDictOutput"
+      }
+    },
+    {
+      "name": "nx_assembly_remove",
+      "description": "Remove an assembly occurrence; its source .prt file is retained.",
+      "input_schema": {
+        "properties": {
+          "component_id": {
+            "title": "Component Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "component_id"
+        ],
+        "type": "object",
+        "title": "nx_assembly_removeArguments"
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "nx_assembly_removeDictOutput"
+      }
+    },
+    {
+      "name": "nx_assembly_replace",
+      "description": "Replace an occurrence with another workspace .prt using the NX12 API.",
+      "input_schema": {
+        "properties": {
+          "component_id": {
+            "title": "Component Id",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "component_id",
+          "path"
+        ],
+        "type": "object",
+        "title": "nx_assembly_replaceArguments"
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "nx_assembly_replaceDictOutput"
+      }
+    },
+    {
+      "name": "nx_assembly_component_geometry",
+      "description": "Read occurrence face/edge selectors for assembly constraints.",
+      "input_schema": {
+        "properties": {
+          "component_id": {
+            "title": "Component Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "component_id"
+        ],
+        "type": "object",
+        "title": "nx_assembly_component_geometryArguments"
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "nx_assembly_component_geometryDictOutput"
+      }
+    },
+    {
+      "name": "nx_assembly_constraint",
+      "description": "Create an NX12 assembly constraint and read its actual solver status.\n\n        Face indices come from nx_assembly_component_geometry. Distance is mm;\n        angle is degrees. A fix constraint requires only component_a.\n        ",
+      "input_schema": {
+        "properties": {
+          "kind": {
+            "enum": [
+              "fix",
+              "coaxial",
+              "touch",
+              "distance",
+              "angle"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "component_a": {
+            "title": "Component A",
+            "type": "string"
+          },
+          "component_b": {
+            "default": "",
+            "title": "Component B",
+            "type": "string"
+          },
+          "face_a": {
+            "default": -1,
+            "title": "Face A",
+            "type": "integer"
+          },
+          "face_b": {
+            "default": -1,
+            "title": "Face B",
+            "type": "integer"
+          },
+          "value": {
+            "default": 0.0,
+            "title": "Value",
+            "type": "number"
+          },
+          "name": {
+            "default": "",
+            "title": "Name",
+            "type": "string"
+          },
+          "alignment": {
+            "default": "infer",
+            "enum": [
+              "infer",
+              "same",
+              "opposite"
+            ],
+            "title": "Alignment",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "component_a"
+        ],
+        "type": "object",
+        "title": "nx_assembly_constraintArguments"
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "nx_assembly_constraintDictOutput"
+      }
+    },
+    {
+      "name": "nx_assembly_constraints",
+      "description": "Read persistent assembly constraints and their native solver states.",
+      "input_schema": {
+        "properties": {},
+        "type": "object",
+        "title": "nx_assembly_constraintsArguments"
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "nx_assembly_constraintsDictOutput"
+      }
+    },
+    {
+      "name": "nx_assembly_delete_constraint",
+      "description": "Delete an explicit root-assembly constraint before repositioning its components.\n\n        Obtain the current identifier from nx_assembly_constraints. Source\n        prototype geometry and other constraints remain outside this operation.\n        ",
+      "input_schema": {
+        "properties": {
+          "constraint_id": {
+            "title": "Constraint Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "constraint_id"
+        ],
+        "type": "object",
+        "title": "nx_assembly_delete_constraintArguments"
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "nx_assembly_delete_constraintDictOutput"
+      }
+    },
+    {
+      "name": "nx_assembly_solve",
+      "description": "Solve the active assembly constraint network and read resulting positions.",
+      "input_schema": {
+        "properties": {},
+        "type": "object",
+        "title": "nx_assembly_solveArguments"
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "nx_assembly_solveDictOutput"
+      }
+    },
+    {
+      "name": "nx_assembly_save",
+      "description": "Save the root and workspace-owned subassemblies with checked load/save results.\n\n        Files outside the configured workspace must never be written. The\n        Loader validates every referenced prototype before performing saves.\n        ",
+      "input_schema": {
+        "properties": {},
+        "type": "object",
+        "title": "nx_assembly_saveArguments"
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "nx_assembly_saveDictOutput"
+      }
+    },
+    {
+      "name": "nx_assembly_interference",
+      "description": "Check actual component-pair interference; report native outcomes.",
+      "input_schema": {
+        "properties": {
+          "component_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Component Ids"
+          },
+          "include_touching": {
+            "default": false,
+            "title": "Include Touching",
+            "type": "boolean"
+          }
+        },
+        "type": "object",
+        "title": "nx_assembly_interferenceArguments"
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "nx_assembly_interferenceDictOutput"
+      }
+    },
+    {
+      "name": "nx_drafting_add_model_view",
+      "description": "Place an additional named model view, including an isometric view.",
+      "input_schema": {
+        "properties": {
+          "x": {
+            "title": "X",
+            "type": "number"
+          },
+          "y": {
+            "title": "Y",
+            "type": "number"
+          },
+          "model_view": {
+            "default": "Isometric",
+            "title": "Model View",
+            "type": "string"
+          },
+          "scale": {
+            "default": 1.0,
+            "exclusiveMinimum": 0,
+            "title": "Scale",
+            "type": "number"
+          },
+          "name": {
+            "default": "",
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "x",
+          "y"
+        ],
+        "type": "object",
+        "title": "nx_drafting_add_model_viewArguments"
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "nx_drafting_add_model_viewDictOutput"
+      }
+    },
+    {
+      "name": "nx_drafting_create_table",
+      "description": "Create an editable NX tabular note, for title blocks or BOM tables.\n\n        Dimensions and position are sheet mm. Text is explicit; the tool does\n        not invent material, drawing numbers, or standard-compliance claims.\n        ",
+      "input_schema": {
+        "properties": {
+          "x": {
+            "title": "X",
+            "type": "number"
+          },
+          "y": {
+            "title": "Y",
+            "type": "number"
+          },
+          "column_widths": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Column Widths",
+            "type": "array"
+          },
+          "row_heights": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Row Heights",
+            "type": "array"
+          },
+          "cells": {
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "title": "Cells",
+            "type": "array"
+          },
+          "name": {
+            "default": "",
+            "title": "Name",
+            "type": "string"
+          },
+          "text_height": {
+            "default": 3.0,
+            "exclusiveMinimum": 0,
+            "title": "Text Height",
+            "type": "number"
+          },
+          "font": {
+            "default": "chinesef",
+            "title": "Font",
+            "type": "string"
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "column_widths",
+          "row_heights",
+          "cells"
+        ],
+        "type": "object",
+        "title": "nx_drafting_create_tableArguments"
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "nx_drafting_create_tableDictOutput"
+      }
+    },
+    {
+      "name": "nx_drafting_update_table",
+      "description": "Update explicit editable drawing-table cells by zero-based row/column.",
+      "input_schema": {
+        "properties": {
+          "table_id": {
+            "title": "Table Id",
+            "type": "string"
+          },
+          "updates": {
+            "items": {
+              "$ref": "#/$defs/TableCellUpdate"
+            },
+            "minItems": 1,
+            "title": "Updates",
+            "type": "array"
+          }
+        },
+        "required": [
+          "table_id",
+          "updates"
+        ],
+        "type": "object",
+        "$defs": {
+          "TableCellUpdate": {
+            "additionalProperties": false,
+            "properties": {
+              "row": {
+                "minimum": 0,
+                "title": "Row",
+                "type": "integer"
+              },
+              "column": {
+                "minimum": 0,
+                "title": "Column",
+                "type": "integer"
+              },
+              "text": {
+                "title": "Text",
+                "type": "string"
+              }
+            },
+            "required": [
+              "row",
+              "column",
+              "text"
+            ],
+            "title": "TableCellUpdate",
+            "type": "object"
+          }
+        },
+        "title": "nx_drafting_update_tableArguments"
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "nx_drafting_update_tableDictOutput"
+      }
+    },
+    {
+      "name": "nx_drafting_list_tables",
+      "description": "Read actual drawing table cells, dimensions, and identifiers.",
+      "input_schema": {
+        "properties": {},
+        "type": "object",
+        "title": "nx_drafting_list_tablesArguments"
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "nx_drafting_list_tablesDictOutput"
+      }
+    },
+    {
+      "name": "nx_drafting_center_mark",
+      "description": "Create a center mark on a circular model edge in the selected view.",
+      "input_schema": {
+        "properties": {
+          "edge_index": {
+            "minimum": 0,
+            "title": "Edge Index",
+            "type": "integer"
+          },
+          "view_id": {
+            "default": "0",
+            "title": "View Id",
+            "type": "string"
+          },
+          "body_id": {
+            "default": "BODY_1",
+            "title": "Body Id",
+            "type": "string"
+          },
+          "size": {
+            "default": 5.0,
+            "exclusiveMinimum": 0,
+            "title": "Size",
+            "type": "number"
+          }
+        },
+        "required": [
+          "edge_index"
+        ],
+        "type": "object",
+        "title": "nx_drafting_center_markArguments"
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "nx_drafting_center_markDictOutput"
+      }
+    },
+    {
+      "name": "nx_drafting_centerline",
+      "description": "Create a centerline from two explicit model-edge references.",
+      "input_schema": {
+        "properties": {
+          "edge_index_1": {
+            "minimum": 0,
+            "title": "Edge Index 1",
+            "type": "integer"
+          },
+          "edge_index_2": {
+            "minimum": 0,
+            "title": "Edge Index 2",
+            "type": "integer"
+          },
+          "view_id": {
+            "default": "0",
+            "title": "View Id",
+            "type": "string"
+          },
+          "body_id": {
+            "default": "BODY_1",
+            "title": "Body Id",
+            "type": "string"
+          },
+          "size": {
+            "default": 5.0,
+            "exclusiveMinimum": 0,
+            "title": "Size",
+            "type": "number"
+          }
+        },
+        "required": [
+          "edge_index_1",
+          "edge_index_2"
+        ],
+        "type": "object",
+        "title": "nx_drafting_centerlineArguments"
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "nx_drafting_centerlineDictOutput"
+      }
+    },
+    {
+      "name": "nx_drafting_detail_view",
+      "description": "Create a native detail view from an explicit sheet-coordinate region.",
+      "input_schema": {
+        "properties": {
+          "view_id": {
+            "title": "View Id",
+            "type": "string"
+          },
+          "min_x": {
+            "title": "Min X",
+            "type": "number"
+          },
+          "min_y": {
+            "title": "Min Y",
+            "type": "number"
+          },
+          "max_x": {
+            "title": "Max X",
+            "type": "number"
+          },
+          "max_y": {
+            "title": "Max Y",
+            "type": "number"
+          },
+          "x": {
+            "title": "X",
+            "type": "number"
+          },
+          "y": {
+            "title": "Y",
+            "type": "number"
+          },
+          "scale": {
+            "default": 2.0,
+            "exclusiveMinimum": 0,
+            "title": "Scale",
+            "type": "number"
+          },
+          "name": {
+            "default": "",
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "view_id",
+          "min_x",
+          "min_y",
+          "max_x",
+          "max_y",
+          "x",
+          "y"
+        ],
+        "type": "object",
+        "title": "nx_drafting_detail_viewArguments"
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "nx_drafting_detail_viewDictOutput"
+      }
+    },
+    {
+      "name": "nx_drafting_section_view",
+      "description": "Create a native section view from a stated cutting-line point/direction.",
+      "input_schema": {
+        "properties": {
+          "view_id": {
+            "title": "View Id",
+            "type": "string"
+          },
+          "cut_x": {
+            "title": "Cut X",
+            "type": "number"
+          },
+          "cut_y": {
+            "title": "Cut Y",
+            "type": "number"
+          },
+          "x": {
+            "title": "X",
+            "type": "number"
+          },
+          "y": {
+            "title": "Y",
+            "type": "number"
+          },
+          "cut_direction": {
+            "default": "vertical",
+            "enum": [
+              "vertical",
+              "horizontal"
+            ],
+            "title": "Cut Direction",
+            "type": "string"
+          },
+          "scale": {
+            "default": 1.0,
+            "exclusiveMinimum": 0,
+            "title": "Scale",
+            "type": "number"
+          },
+          "name": {
+            "default": "",
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "view_id",
+          "cut_x",
+          "cut_y",
+          "x",
+          "y"
+        ],
+        "type": "object",
+        "title": "nx_drafting_section_viewArguments"
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "nx_drafting_section_viewDictOutput"
+      }
+    },
+    {
+      "name": "nx_drafting_gdt",
+      "description": "Create a native GD&T annotation from explicit NX-formatted tolerance text.\n\n        Text and datum interpretation must be reviewed against the supplied\n        drawing; creating a symbol does not infer a manufacturing requirement.\n        ",
+      "input_schema": {
+        "properties": {
+          "x": {
+            "title": "X",
+            "type": "number"
+          },
+          "y": {
+            "title": "Y",
+            "type": "number"
+          },
+          "lines": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Lines"
+          },
+          "characteristic": {
+            "anyOf": [
+              {
+                "enum": [
+                  "flatness",
+                  "straightness",
+                  "circularity",
+                  "cylindricity"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Characteristic"
+          },
+          "tolerance": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Tolerance"
+          }
+        },
+        "required": [
+          "x",
+          "y"
+        ],
+        "type": "object",
+        "title": "nx_drafting_gdtArguments"
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "nx_drafting_gdtDictOutput"
+      }
+    },
+    {
+      "name": "nx_drafting_balloon",
+      "description": "Create a native parts-list balloon with optional explicit leader endpoint.",
+      "input_schema": {
+        "properties": {
+          "x": {
+            "title": "X",
+            "type": "number"
+          },
+          "y": {
+            "title": "Y",
+            "type": "number"
+          },
+          "text": {
+            "default": "1",
+            "title": "Text",
+            "type": "string"
+          },
+          "leader_x": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Leader X"
+          },
+          "leader_y": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Leader Y"
+          }
+        },
+        "required": [
+          "x",
+          "y"
+        ],
+        "type": "object",
+        "title": "nx_drafting_balloonArguments"
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "nx_drafting_balloonDictOutput"
+      }
+    },
+    {
+      "name": "nx_drafting_export_cad",
+      "description": "Export a sheet through the NX12 translator and verify the output file.",
+      "input_schema": {
+        "properties": {
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "sheet_name": {
+            "default": "",
+            "title": "Sheet Name",
+            "type": "string"
+          },
+          "format": {
+            "default": "dxf",
+            "enum": [
+              "dxf",
+              "dwg"
+            ],
+            "title": "Format",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "type": "object",
+        "title": "nx_drafting_export_cadArguments"
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "nx_drafting_export_cadDictOutput"
+      }
+    },
+    {
+      "name": "nx_drawing_plan",
+      "description": "Plan a part from an image and explicitly interpreted dimensions; does not perform OCR.\n\n        No NX mutation occurs. Missing dimensions return needs_dimensions, and\n        unexpected requirements require review. The image hash binds provenance.\n        ",
+      "input_schema": {
+        "properties": {
+          "source_image": {
+            "title": "Source Image",
+            "type": "string"
+          },
+          "family": {
+            "enum": [
+              "stepped_shaft",
+              "flange",
+              "bracket",
+              "box",
+              "gear"
+            ],
+            "title": "Family",
+            "type": "string"
+          },
+          "dimensions": {
+            "additionalProperties": true,
+            "title": "Dimensions",
+            "type": "object"
+          },
+          "units": {
+            "const": "mm",
+            "default": "mm",
+            "title": "Units",
+            "type": "string"
+          },
+          "material": {
+            "default": "",
+            "title": "Material",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_image",
+          "family",
+          "dimensions"
+        ],
+        "type": "object",
+        "title": "nx_drawing_planArguments"
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "nx_drawing_planDictOutput"
+      }
+    },
+    {
+      "name": "nx_model_check",
+      "description": "Read native geometry and check a matching image-plan part; no model mutation.",
+      "input_schema": {
+        "properties": {
+          "plan": {
+            "additionalProperties": true,
+            "title": "Plan",
+            "type": "object"
+          }
+        },
+        "required": [
+          "plan"
+        ],
+        "type": "object",
+        "title": "nx_model_checkArguments"
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "nx_model_checkDictOutput"
+      }
+    },
+    {
+      "name": "nx_model_from_plan",
+      "description": "Build a new independent NX12 part using existing MCP bridge commands.\n\n        Supports explicit stepped shafts, plain flanges, prismatic L brackets,\n        and uniform open-top boxes. Explicitly accepted tolerance-bounded polygonal gears are supported; manufacturing-grade gears are not. Every\n        mutating command checks the active part; partial failures retain a trace.\n        ",
+      "input_schema": {
+        "properties": {
+          "plan": {
+            "additionalProperties": true,
+            "title": "Plan",
+            "type": "object"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "export_step": {
+            "default": false,
+            "title": "Export Step",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "plan",
+          "path"
+        ],
+        "type": "object",
+        "title": "nx_model_from_planArguments"
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": true,
+        "title": "nx_model_from_planDictOutput"
+      }
+    }
+  ]
+}

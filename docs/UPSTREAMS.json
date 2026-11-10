@@ -1,0 +1,25 @@
+{
+  "skill": {
+    "repo": "EVOL233awa/nxopen-journal",
+    "license": "MIT",
+    "version": "1.5.0",
+    "commit": "c0b1daf8a0c4c646f9e59788557c8cf3fd1cd689"
+  },
+  "mcp_source_chain": [
+    {
+      "repo": "kongbaic/NX_MCP-Enhanced",
+      "commit": "unknown",
+      "license": "MIT"
+    },
+    {
+      "repo": "DreamEnding/NX_MCP",
+      "commit": "unknown",
+      "license": "MIT"
+    }
+  ],
+  "reference": {
+    "repo": "Cai-aa/CAD-Agent-Hub",
+    "license": "MIT"
+  },
+  "adaptation_license": "GPL-3.0-only"
+}
